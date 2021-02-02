@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include frappe_graphql *.css
+recursive-include frappe_graphql *.csv
+recursive-include frappe_graphql *.html
+recursive-include frappe_graphql *.ico
+recursive-include frappe_graphql *.js
+recursive-include frappe_graphql *.json
+recursive-include frappe_graphql *.md
+recursive-include frappe_graphql *.png
+recursive-include frappe_graphql *.py
+recursive-include frappe_graphql *.svg
+recursive-include frappe_graphql *.txt
+recursive-exclude frappe_graphql *.pyc
