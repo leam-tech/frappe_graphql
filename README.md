@@ -16,8 +16,8 @@ and start making your graphql requests against:
 /api/method/graphql
 ```
 
-## Features
-### Filtering
+# Features
+## Filtering
 You can filter any doctype by its `name`, `standard_filters` or with a `filters` json
 
 Filtering by name is straight forward:
@@ -55,10 +55,59 @@ And with `filters` json dict:
 }
 ```  
 
-### RolePermission integration
+## RolePermission integration
 Data is returned based on Read access to the resource
 
-### Generic Mutations: set_value & save_doc
+## Generic Mutations: set_value & save_doc
+- SetValue
+#### Query
+```graphql
+mutation SET_VALUE($doctype: String!, $name: String!, $fieldname: String!, $value: String!) {
+    setValue(doctype: $doctype, name: $name, fieldname: $fieldname, value: $value) {
+        doctype,
+        name,
+        fieldname,
+        value,
+        doc {
+            name,
+            ...on User {
+                first_name,
+                last_name,
+                full_name
+            }
+        }
+    }
+}
+```
+#### Variables
+```json
+{
+    "doctype": "User",
+    "name": "test@test.com",
+    "fieldname": "first_name",
+    "value": "Test X"
+}
+```
+#### Response
+```json
+{
+    "data": {
+        "setValue": {
+            "doctype": "User",
+            "name": "test@test.com",
+            "fieldname": "first_name",
+            "value": "Test",
+            "doc": {
+                "name": "test@test.com",
+                "first_name": "Test X",
+                "last_name": "Test A",
+                "full_name": "Test X Test A"
+            }
+        }
+    }
+}
+```
+
 ### Pagination
 ### Support SDL Extensions
 https://docs.reactioncommerce.com/docs/how-to-extend-graphql-to-add-field

@@ -21,7 +21,7 @@ def make_doctype_sdl_files(target_dir):
 
 
 def get_root_sdl():
-    sdl = "schema {\n\tquery: Query\n}"
+    sdl = "schema {\n\tquery: Query\n\tmutation: Mutation\n}"
 
     sdl += "\n\ninterface BaseDocType {"
     for field in default_fields:
@@ -31,6 +31,8 @@ def get_root_sdl():
             fieldtype = "String"
         sdl += f"\n  {field}: {fieldtype}"
     sdl += "}"
+
+    sdl += "\n\n" + MUTATIONS
 
     sdl += "\n\ntype Query {"
     for doctype in frappe.get_all("DocType"):
@@ -105,3 +107,25 @@ def get_graphql_type(docfield, ignore_reqd=False):
         graphql_type += "!"
 
     return graphql_type
+
+
+MUTATIONS = """
+type SET_VALUE_TYPE {
+    doctype: String!
+    name: String!
+    fieldname: String!
+    value: String!
+    doc: BaseDocType!
+}
+
+type SAVE_DOC_TYPE {
+    doctype: String!
+    name: String!
+    doc: BaseDocType!
+}
+
+type Mutation {
+    setValue(doctype: String!, name: String!, fieldname: String!, value: String): SET_VALUE_TYPE
+    saveDoc(doctype: String!, doc: String!): SAVE_DOC_TYPE
+}
+"""

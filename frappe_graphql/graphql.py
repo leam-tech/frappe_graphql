@@ -2,7 +2,7 @@ import frappe
 import graphql
 
 from frappe_graphql.utils.loader import load_schema_from_path
-from frappe_graphql.utils.resolver import default_doctype_resolver
+from frappe_graphql.utils.resolver import default_doctype_resolver, bind_mutation_resolvers
 
 
 def get_schema():
@@ -11,6 +11,7 @@ def get_schema():
 
     ast_doc = graphql.parse(schema)
     schema = graphql.build_ast_schema(ast_doc)
+    bind_mutation_resolvers(schema=schema)
     return schema
 
 
