@@ -45,7 +45,7 @@ def get_root_sdl():
             if field.fieldtype in table_fields:
                 continue
             sdl += f", {field.fieldname}: {get_graphql_type(field, ignore_reqd=True)}"
-        
+
         sdl += ", filters: String"
         sdl += ", limit_start: Int = 0, limit_page_length: Int = 20"
 
