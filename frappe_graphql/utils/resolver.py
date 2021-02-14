@@ -14,17 +14,25 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         if not frappe.has_permission(doctype=doctype):
             return []
         filters = frappe._dict()
+        limit_start = kwargs.pop("limit_start") or 0
+        limit_page_length = kwargs.pop("limit_page_length") or 20
         if kwargs and len(kwargs.keys()):
             if "filters" in kwargs:
                 filters = frappe.parse_json(kwargs.get("filters"))
             else:
                 filters = kwargs
-        return frappe.get_list(doctype, filters=filters)
+
+        return frappe.get_list(
+            doctype,
+            filters=filters,
+            limit_start=limit_start,
+            limit_page_length=limit_page_length
+        )
     elif parent_type.name in ("SET_VALUE_TYPE", "SAVE_DOC_TYPE"):
         # This section is executed on mutation return types
         return (obj or {}).get(info.field_name, None)
     elif len(info.path) == 3:
-        # this section is executed for Fields on DocType object types. 
+        # this section is executed for Fields on DocType object types.
         doctype = get_doctype(parent_type.name)
         if not doctype:
             return None

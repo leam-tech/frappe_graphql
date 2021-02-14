@@ -38,13 +38,16 @@ def get_root_sdl():
     for doctype in frappe.get_all("DocType"):
         doctype = doctype.name
         sdl += f"\n  {doctype.replace(' ', '')}"
-        sdl += "(name: String, filters: String"
+        sdl += "(name: String"
 
         # if doctype in ("User", "Workflow"):
         for field in frappe.get_meta(doctype).get("fields", {"in_standard_filter": 1}):
             if field.fieldtype in table_fields:
                 continue
             sdl += f", {field.fieldname}: {get_graphql_type(field, ignore_reqd=True)}"
+        
+        sdl += ", filters: String"
+        sdl += ", limit_start: Int = 0, limit_page_length: Int = 20"
 
         sdl += f"): [{doctype.replace(' ', '')}!]!"
     sdl += "\n}"
