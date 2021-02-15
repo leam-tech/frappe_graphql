@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from . import __version__ as app_version
+# from . import __version__ as app_version
 
 app_name = "frappe_graphql"
 app_title = "Frappe Graphql"
@@ -46,7 +46,7 @@ app_license = "MIT"
 
 # website user home page (by Role)
 # role_home_page = {
-#	"Role": "home_page"
+#   "Role": "home_page"
 # }
 
 # Generators
@@ -72,11 +72,11 @@ app_license = "MIT"
 # Permissions evaluated in scripted ways
 
 # permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
+#   "Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
 # }
 #
 # has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
+#   "Event": "frappe.desk.doctype.event.event.has_permission",
 # }
 
 # DocType Class
@@ -84,7 +84,7 @@ app_license = "MIT"
 # Override standard doctype classes
 
 # override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
+#   "ToDo": "custom_app.overrides.CustomToDo"
 # }
 
 # Document Events
@@ -92,32 +92,32 @@ app_license = "MIT"
 # Hook on document methods and events
 
 # doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
+#   "*": {
+#     "on_update": "method",
+#     "on_cancel": "method",
+#     "on_trash": "method"
+#  }
 # }
 
 # Scheduled Tasks
 # ---------------
 
 # scheduler_events = {
-# 	"all": [
-# 		"frappe_graphql.tasks.all"
-# 	],
-# 	"daily": [
-# 		"frappe_graphql.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"frappe_graphql.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"frappe_graphql.tasks.weekly"
-# 	]
-# 	"monthly": [
-# 		"frappe_graphql.tasks.monthly"
-# 	]
+#   "all": [
+#     "frappe_graphql.tasks.all"
+#   ],
+#   "daily": [
+#     "frappe_graphql.tasks.daily"
+#   ],
+#   "hourly": [
+#     "frappe_graphql.tasks.hourly"
+#   ],
+#   "weekly": [
+#     "frappe_graphql.tasks.weekly"
+#   ]
+#   "monthly": [
+#     "frappe_graphql.tasks.monthly"
+#   ]
 # }
 
 # Testing
@@ -128,18 +128,17 @@ app_license = "MIT"
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "frappe_graphql.event.get_events"
-# }
+override_whitelisted_methods = {
+    "graphql": "frappe_graphql.graphql.execute"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 # override_doctype_dashboards = {
-# 	"Task": "frappe_graphql.task.get_dashboard_data"
+#   "Task": "frappe_graphql.task.get_dashboard_data"
 # }
 
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]
-

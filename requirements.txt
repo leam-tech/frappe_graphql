@@ -1,1 +1,2 @@
 frappe
+graphql-core==3.1.3
