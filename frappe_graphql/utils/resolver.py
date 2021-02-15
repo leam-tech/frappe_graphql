@@ -1,6 +1,6 @@
 from typing import Any
 import frappe
-from graphql import GraphQLObjectType, GraphQLResolveInfo
+from graphql import GraphQLObjectType, GraphQLResolveInfo, GraphQLSchema
 
 
 def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
@@ -9,7 +9,7 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         frappe.throw("Invalid GraphQL")
 
     if parent_type.name == "Query" and info.path[0] is None:
-        # root doctype query
+        # This section is executed on root query type fields
         doctype = get_doctype(info.path[1])
         if not frappe.has_permission(doctype=doctype):
             return []
@@ -20,14 +20,82 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
             else:
                 filters = kwargs
         return frappe.get_list(doctype, filters=filters)
+    elif parent_type.name in ("SET_VALUE_TYPE", "SAVE_DOC_TYPE"):
+        # This section is executed on mutation return types
+        return (obj or {}).get(info.field_name, None)
     elif len(info.path) == 3:
+        # this section is executed for Fields on DocType object types. 
         doctype = get_doctype(parent_type.name)
+        if not doctype:
+            return None
         if not frappe.has_permission(doctype=doctype):
-            return []
+            return None
         cached_doc = frappe.get_cached_doc(doctype, obj.name)
         return cached_doc.get(info.field_name)
 
 
 def get_doctype(name):
-    valid_doctypes = [x.name for x in frappe.get_all("DocType")]
-    return [x for x in valid_doctypes if x.replace(" ", "") == name][0]
+    map = getattr(frappe.local, "doctype_graphql_map", None)
+    if not map:
+        valid_doctypes = [x.name for x in frappe.get_all("DocType")]
+        map = frappe._dict()
+        for dt in valid_doctypes:
+            map[dt.replace(" ", "")] = dt
+        frappe.local.doctype_graphql_map = map
+
+    return map.get(name, None)
+
+
+def bind_mutation_resolvers(schema: GraphQLSchema):
+    mutation_type = schema.mutation_type
+    mutation_type.fields["setValue"].resolve = set_value_resolver
+    mutation_type.fields["saveDoc"].resolve = save_doc_resolver
+
+    SET_VALUE_TYPE: GraphQLObjectType = mutation_type.fields["setValue"].type
+    SAVE_DOC_TYPE: GraphQLObjectType = mutation_type.fields["saveDoc"].type
+
+    def resolve_dt(obj, info, *args, **kwargs):
+        return obj.doctype.replace(" ", "")
+
+    # setting type resolver for Abstract type (interface)
+    SET_VALUE_TYPE.fields["doc"].type.of_type.resolve_type = resolve_dt
+    SAVE_DOC_TYPE.fields["doc"].type.of_type.resolve_type = resolve_dt
+
+
+def set_value_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
+    doctype = kwargs["doctype"]
+    name = kwargs["name"]
+    frappe.set_value(
+        doctype=doctype,
+        docname=name,
+        fieldname=kwargs["fieldname"],
+        value=kwargs["value"]
+    )
+    frappe.clear_document_cache(doctype, name)
+    doc = frappe.get_doc(doctype, name).as_dict()
+    return {
+        "doctype": doctype,
+        "name": name,
+        "fieldname": kwargs["fieldname"],
+        "value": kwargs["value"],
+        "doc": doc
+    }
+
+
+def save_doc_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
+    new_doc = frappe.parse_json(kwargs["doc"])
+    new_doc.doctype = kwargs["doctype"]
+
+    if new_doc.name and frappe.db.exists(new_doc.doctype, new_doc.name):
+        doc = frappe.get_doc(new_doc.doctype, new_doc.name)
+    else:
+        doc = frappe.get_doc(new_doc.doctype)
+    doc.update(new_doc)
+    doc.save()
+    doc.reload()
+
+    return {
+        "doctype": doc.doctype,
+        "name": doc.name,
+        "doc": doc.as_dict()
+    }
