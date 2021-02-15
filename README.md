@@ -109,6 +109,16 @@ mutation SET_VALUE($doctype: String!, $name: String!, $fieldname: String!, $valu
 ```
 
 ### Pagination
+`limit_start` & `limit_page_length` could be passed to paginate through the doctypes
+#### Query
+```graphql
+{
+    User(limit_start: 0, limit_page_length: 10) {
+        name
+    }
+}
+```
+
 ### Support SDL Extensions
 https://docs.reactioncommerce.com/docs/how-to-extend-graphql-to-add-field
 ### Support additional Mutations via Hooks
