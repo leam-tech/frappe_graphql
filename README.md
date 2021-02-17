@@ -108,6 +108,45 @@ mutation SET_VALUE($doctype: String!, $name: String!, $fieldname: String!, $valu
 }
 ```
 
+- Save Doc
+#### Query
+```graphql
+mutation SAVE_DOC($doctype: String!, $doc: String!){
+    saveDoc(doctype: $doctype, doc: $doc){
+        doctype,
+        name,
+        doc {
+            name,
+            ... on ToDo {
+                priority
+            }
+        }
+    }
+}
+```
+#### Variables
+```json
+{
+    "doctype":"ToDo",
+    "doc": "{ \"priority\": \"High\", \"description\": \"Test Todo 1\" }"
+}
+```
+#### Response
+```json
+{
+    "data": {
+        "saveDoc": {
+            "doctype": "ToDo",
+            "name": "122cec40d0",
+            "doc": {
+                "name": "122cec40d0",
+                "priority": "High"
+            }
+        }
+    }
+}
+```
+
 ## Pagination
 `limit_start` & `limit_page_length` could be passed to paginate through the doctypes
 #### Query
@@ -131,12 +170,14 @@ graphql_sdl_dir = [
     "./your-app/your-app/generated/sdl/dir2",
 ]
 ```
-The above will look for graphql files in `your-bench/apps/your-app/your-app/generated/sdl1` folder.
+The above will look for graphql files in `your-bench/apps/your-app/your-app/generated/sdl/dir1` & `./dir2` folders.
+
+
 - `graphql_schema_processors`  
 You can pass in a list of cmd that gets executed on schema creation. You are given `GraphQLSchema` object (please refer [graphql-core](https://github.com/graphql-python/graphql-core)) as the only parameter. You can modify it or extend it as per your requirements.
 This is a good place to attach the resolvers for the custom SDLs defined via `graphql_sdl_dir`
 
-### Examples
+## Examples
 ### Adding a newly created DocType
 - Generate the SDLs in your app directory
 ```bash

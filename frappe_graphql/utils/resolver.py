@@ -97,7 +97,7 @@ def save_doc_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
     if new_doc.name and frappe.db.exists(new_doc.doctype, new_doc.name):
         doc = frappe.get_doc(new_doc.doctype, new_doc.name)
     else:
-        doc = frappe.get_doc(new_doc.doctype)
+        doc = frappe.new_doc(new_doc.doctype)
     doc.update(new_doc)
     doc.save()
     doc.reload()
