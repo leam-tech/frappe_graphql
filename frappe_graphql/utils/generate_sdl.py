@@ -30,6 +30,8 @@ def get_root_sdl():
         else:
             fieldtype = "String"
         sdl += f"\n  {field}: {fieldtype}"
+    sdl += "\n  owner__doc: User"
+    sdl += "\n  modified_by__doc: User"
     sdl += "}"
 
     sdl += "\n\n" + MUTATIONS
@@ -67,6 +69,8 @@ def get_doctype_sdl(doctype):
         else:
             fieldtype = "String"
         sdl += f"\n  {field}: {fieldtype}"
+    sdl += "\n  owner__doc: User"
+    sdl += "\n  modified_by__doc: User"
 
     for field in meta.fields:
         if field.fieldtype in display_fieldtypes:
@@ -75,6 +79,8 @@ def get_doctype_sdl(doctype):
             continue
         defined_fieldnames.append(field.fieldname)
         sdl += f"\n  {get_field_sdl(field)}"
+        if field.fieldtype == "Link":
+            sdl += f"\n  {get_link_field_doc_sdl(field)}"
 
     sdl += "\n}"
     return sdl
@@ -82,6 +88,10 @@ def get_doctype_sdl(doctype):
 
 def get_field_sdl(docfield):
     return f"{docfield.fieldname}: {get_graphql_type(docfield)}"
+
+
+def get_link_field_doc_sdl(docfield):
+    return f"{docfield.fieldname}__doc: {docfield.options.replace(' ', '')}"
 
 
 def get_graphql_type(docfield, ignore_reqd=False):

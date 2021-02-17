@@ -8,9 +8,9 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
     if not isinstance(info.parent_type, GraphQLObjectType):
         frappe.throw("Invalid GraphQL")
 
-    if parent_type.name == "Query" and info.path[0] is None:
+    if parent_type.name == "Query":
         # This section is executed on root query type fields
-        doctype = get_doctype(info.path[1])
+        doctype = get_doctype(info.field_name)
         if not frappe.has_permission(doctype=doctype):
             return []
         filters = frappe._dict()
@@ -31,15 +31,23 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
     elif parent_type.name in ("SET_VALUE_TYPE", "SAVE_DOC_TYPE"):
         # This section is executed on mutation return types
         return (obj or {}).get(info.field_name, None)
-    elif len(info.path) == 3:
+    elif (obj.doctype and obj.name) or get_doctype(parent_type.name):
         # this section is executed for Fields on DocType object types.
-        doctype = get_doctype(parent_type.name)
+        doctype = obj.doctype or get_doctype(parent_type.name)
         if not doctype:
             return None
         if not frappe.has_permission(doctype=doctype):
             return None
+
         cached_doc = frappe.get_cached_doc(doctype, obj.name)
-        return cached_doc.get(info.field_name)
+        if info.field_name.endswith("__doc"):
+            fieldname = info.field_name.split("__doc")[0]
+            linked_dt = frappe.get_meta(doctype).get("fields", fieldname)[0].options
+            return frappe._dict(name=cached_doc.get(fieldname), doctype=linked_dt)
+        else:
+            value = cached_doc.get(info.field_name)
+
+        return value
 
 
 def get_doctype(name):

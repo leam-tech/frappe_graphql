@@ -54,6 +54,56 @@ And with `filters` json dict:
     }
 }
 ```  
+## Access Field Linked Documents in nested queries
+All Link fields are generate another graphql field with a `__doc` suffix.
+```
+{
+    ToDo (limit_page_length: 1) {
+        name,
+        priority,
+        description,
+        assigned_by,
+        assigned_by__doc {
+            full_name,
+            roles {
+                role,
+                role__doc {
+                    name,
+                    creation
+                }
+            }
+        }
+    }
+}
+```
+Result
+```json
+{
+    "data": {
+        "ToDo": [
+            {
+                "name": "ae6f39845b",
+                "priority": "Low",
+                "description": "<div class=\"ql-editor read-mode\"><p>TESADASD</p></div>",
+                "assigned_by": "Administrator",
+                "assigned_by__doc": {
+                    "full_name": "Administrator",
+                    "roles": [
+                        {
+                            "role": "Administrator",
+                            "role__doc": {
+                                "name": "Administrator",
+                                "creation": "2021-02-02 08:34:42.170306",
+                            }
+                        }
+                    ]
+                }
+            }
+            ...
+        ]
+    }
+}
+```
 
 ## RolePermission integration
 Data is returned based on Read access to the resource
