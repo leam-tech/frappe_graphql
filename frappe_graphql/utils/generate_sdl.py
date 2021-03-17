@@ -32,7 +32,7 @@ def get_root_sdl():
         sdl += f"\n  {field}: {fieldtype}"
     sdl += "\n  owner__doc: User"
     sdl += "\n  modified_by__doc: User"
-    sdl += "}"
+    sdl += "\n}"
 
     sdl += "\n\n" + MUTATIONS
 

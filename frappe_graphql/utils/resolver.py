@@ -12,7 +12,7 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         # This section is executed on root query type fields
         doctype = get_doctype(info.field_name)
         if not frappe.has_permission(doctype=doctype):
-            return []
+            raise frappe.PermissionError("No read permission for doctype " + doctype)
         filters = frappe._dict()
         limit_start = kwargs.pop("limit_start") or 0
         limit_page_length = kwargs.pop("limit_page_length") or 20
@@ -31,13 +31,14 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
     elif parent_type.name in ("SET_VALUE_TYPE", "SAVE_DOC_TYPE"):
         # This section is executed on mutation return types
         return (obj or {}).get(info.field_name, None)
-    elif (obj.doctype and obj.name) or get_doctype(parent_type.name):
+    elif (obj.get("doctype") and obj.get("name")) or get_doctype(parent_type.name):
         # this section is executed for Fields on DocType object types.
         doctype = obj.doctype or get_doctype(parent_type.name)
         if not doctype:
             return None
+
         if not frappe.has_permission(doctype=doctype):
-            return None
+            raise frappe.PermissionError("No read permission for doctype " + doctype)
 
         cached_doc = frappe.get_cached_doc(doctype, obj.name)
         if info.field_name.endswith("__doc"):
@@ -48,6 +49,12 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
             value = cached_doc.get(info.field_name)
 
         return value
+
+    try:
+        # default resolver
+        return (obj or {}).get(info.field_name)
+    except Exception:
+        return None
 
 
 def get_doctype(name):
