@@ -3,7 +3,16 @@ import frappe
 from frappe.model import display_fieldtypes, table_fields, default_fields
 
 
-def make_doctype_sdl_files(target_dir):
+def make_doctype_sdl_files(target_dir, doctypes=[]):
+
+    write_root = len(doctypes or []) == 0
+    if doctypes:
+        for dt in doctypes:
+            if not frappe.db.exists("DocType", dt):
+                raise Exception("Invalid DocType: " + dt)
+    else:
+        doctypes = [x.name for x in frappe.get_all("DocType")]
+
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
 
@@ -12,10 +21,10 @@ def make_doctype_sdl_files(target_dir):
         with open(target_file, "w") as f:
             f.write(contents)
 
-    write_file("root", get_root_sdl())
+    if write_root:
+        write_file("root", get_root_sdl())
 
-    for doctype in frappe.get_all("DocType"):
-        doctype = doctype.name
+    for doctype in doctypes:
         sdl = get_doctype_sdl(doctype)
         write_file(doctype, sdl)
 
@@ -37,21 +46,7 @@ def get_root_sdl():
     sdl += "\n\n" + MUTATIONS
 
     sdl += "\n\ntype Query {"
-    for doctype in frappe.get_all("DocType"):
-        doctype = doctype.name
-        sdl += f"\n  {doctype.replace(' ', '')}"
-        sdl += "(name: String"
-
-        # if doctype in ("User", "Workflow"):
-        for field in frappe.get_meta(doctype).get("fields", {"in_standard_filter": 1}):
-            if field.fieldtype in table_fields:
-                continue
-            sdl += f", {field.fieldname}: {get_graphql_type(field, ignore_reqd=True)}"
-
-        sdl += ", filters: String"
-        sdl += ", limit_start: Int = 0, limit_page_length: Int = 20"
-
-        sdl += f"): [{doctype.replace(' ', '')}!]!"
+    sdl += "\n\tping: String!"
     sdl += "\n}"
 
     return sdl
@@ -83,6 +78,25 @@ def get_doctype_sdl(doctype):
             sdl += f"\n  {get_link_field_doc_sdl(field)}"
 
     sdl += "\n}"
+
+    # Extend QueryType
+    sdl += "\n\nextend type Query {"
+    sdl += f"\n  {doctype.replace(' ', '')}"
+    sdl += "(name: String"
+
+    # if doctype in ("User", "Workflow"):
+    for field in meta.get("fields", {"in_standard_filter": 1}):
+        if field.fieldtype in table_fields:
+            continue
+        sdl += f", {field.fieldname}: {get_graphql_type(field, ignore_reqd=True)}"
+
+    sdl += ", filters: String"
+    sdl += ", limit_start: Int = 0, limit_page_length: Int = 20"
+
+    sdl += f"): [{doctype.replace(' ', '')}!]!"
+
+    sdl += "\n}\n"
+
     return sdl
 
 

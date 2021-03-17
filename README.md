@@ -231,7 +231,7 @@ This is a good place to attach the resolvers for the custom SDLs defined via `gr
 ### Adding a newly created DocType
 - Generate the SDLs in your app directory
 ```bash
-$ bench --site test_site graphql generate_sdl --output-dir <your-app/graphql> --doctype <name>
+$ bench --site test_site graphql generate_sdl --output-dir <your-app/graphql> --doctype <name> -dt <name> -dt <name>
 ```
 - Specify this directory in `graphql_sdl_dir` hook and you are done.
 ### Introducing a Custom Field to GraphQL
