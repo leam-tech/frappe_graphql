@@ -65,11 +65,13 @@ def get_root_sdl():
     for field in default_fields:
         if field in ("idx", "docstatus"):
             fieldtype = "Int"
+        elif field in ("owner", "modified_by"):
+            fieldtype = "User!"
         else:
             fieldtype = "String"
         sdl += f"\n  {field}: {fieldtype}"
-    sdl += "\n  owner__doc: User"
-    sdl += "\n  modified_by__doc: User"
+    sdl += "\n  owner__name: String!"
+    sdl += "\n  modified_by__name: String!"
     sdl += "\n}"
 
     sdl += "\n\n" + MUTATIONS
@@ -90,11 +92,13 @@ def get_doctype_sdl(doctype):
     for field in default_fields:
         if field in ("idx", "docstatus"):
             fieldtype = "Int"
+        elif field in ("owner", "modified_by"):
+            fieldtype = "User!"
         else:
             fieldtype = "String"
         sdl += f"\n  {field}: {fieldtype}"
-    sdl += "\n  owner__doc: User"
-    sdl += "\n  modified_by__doc: User"
+    sdl += "\n  owner__name: String!"
+    sdl += "\n  modified_by__name: String!"
 
     for field in meta.fields:
         if field.fieldtype in display_fieldtypes:
@@ -104,7 +108,7 @@ def get_doctype_sdl(doctype):
         defined_fieldnames.append(field.fieldname)
         sdl += f"\n  {get_field_sdl(field)}"
         if field.fieldtype == "Link":
-            sdl += f"\n  {get_link_field_doc_sdl(field)}"
+            sdl += f"\n  {get_link_field_name_sdl(field)}"
 
     sdl += "\n}"
 
@@ -117,7 +121,7 @@ def get_doctype_sdl(doctype):
     for field in meta.get("fields", {"in_standard_filter": 1}):
         if field.fieldtype in table_fields:
             continue
-        sdl += f", {field.fieldname}: {get_graphql_type(field, ignore_reqd=True)}"
+        sdl += f", {field.fieldname}: {get_graphql_type(field, for_filter=True)}"
 
     sdl += ", filters: String"
     sdl += ", limit_start: Int = 0, limit_page_length: Int = 20"
@@ -133,14 +137,14 @@ def get_field_sdl(docfield):
     return f"{docfield.fieldname}: {get_graphql_type(docfield)}"
 
 
-def get_link_field_doc_sdl(docfield):
-    return f"{docfield.fieldname}__doc: {docfield.options.replace(' ', '')}"
+def get_link_field_name_sdl(docfield):
+    return f"{docfield.fieldname}__name: String"
 
 
-def get_graphql_type(docfield, ignore_reqd=False):
+def get_graphql_type(docfield, for_filter=False):
     string_fieldtypes = [
         "Small Text", "Long Text", "Code", "Text Editor", "Markdown Editor",
-        "HTML Editor", "Date", "Datetime", "Time", "Text", "Data", "Link",
+        "HTML Editor", "Date", "Datetime", "Time", "Text", "Data",
         "Dynamic Link", "Password", "Select", "Rating", "Read Only",
         "Attach", "Attach Image", "Signature", "Color", "Barcode", "Geolocation", "Duration"
     ]
@@ -153,13 +157,15 @@ def get_graphql_type(docfield, ignore_reqd=False):
     elif docfield.fieldtype in int_fieldtypes:
         graphql_type = "Int"
     elif docfield.fieldtype in float_fieldtypes:
-        graphql_type = "String"
+        graphql_type = "Float"
+    elif docfield.fieldtype == "Link":
+        graphql_type = "String" if for_filter else f"{docfield.options.replace(' ', '')}"
     elif docfield.fieldtype in table_fields:
         graphql_type = f"[{docfield.options.replace(' ', '')}!]!"
     else:
         frappe.throw(f"Invalid fieldtype: {docfield.fieldtype}")
 
-    if not ignore_reqd and docfield.reqd and graphql_type[-1] != "!":
+    if not for_filter and docfield.reqd and graphql_type[-1] != "!":
         graphql_type += "!"
 
     return graphql_type
