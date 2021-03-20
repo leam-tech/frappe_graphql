@@ -55,7 +55,7 @@ And with `filters` json dict:
 }
 ```  
 ## Access Field Linked Documents in nested queries
-All Link fields return respective doc. Another graphql field with a `__name` suffix can be accessed to get the actual valr
+All Link fields return respective doc. Add `__name` suffix to the link field name to get the link name.
 ```
 {
     ToDo (limit_page_length: 1) {
@@ -84,7 +84,7 @@ Result
             {
                 "name": "ae6f39845b",
                 "priority": "Low",
-                "description": "<div class=\"ql-editor read-mode\"><p>TESADASD</p></div>",
+                "description": "<div class=\"ql-editor read-mode\"><p>Do this</p></div>",
                 "assigned_by__name": "Administrator",
                 "assigned_by": {
                     "full_name": "Administrator",
