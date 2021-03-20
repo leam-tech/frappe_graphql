@@ -1,18 +1,8 @@
 import frappe
 import graphql
 
-from frappe_graphql.utils.loader import load_schema_from_path
-from frappe_graphql.utils.resolver import default_doctype_resolver, bind_mutation_resolvers
-
-
-def get_schema():
-    target_dir = frappe.get_site_path("doctype_sdls")
-    schema = load_schema_from_path(target_dir)
-
-    ast_doc = graphql.parse(schema)
-    schema = graphql.build_ast_schema(ast_doc)
-    bind_mutation_resolvers(schema=schema)
-    return schema
+from frappe_graphql.utils.loader import get_schema
+from frappe_graphql.utils.resolver import default_doctype_resolver
 
 
 @frappe.whitelist(allow_guest=True)
