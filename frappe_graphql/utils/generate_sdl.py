@@ -186,8 +186,15 @@ type SAVE_DOC_TYPE {
     doc: BaseDocType!
 }
 
+type DELETE_DOC_TYPE {
+    doctype: String!
+    name: String!
+    success: Boolean!
+}
+
 type Mutation {
     setValue(doctype: String!, name: String!, fieldname: String!, value: String): SET_VALUE_TYPE
     saveDoc(doctype: String!, doc: String!): SAVE_DOC_TYPE
+    deleteDoc(doctype: String!, name: String!): DELETE_DOC_TYPE
 }
 """

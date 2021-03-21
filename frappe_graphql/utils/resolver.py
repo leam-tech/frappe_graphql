@@ -30,7 +30,7 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
             limit_start=limit_start,
             limit_page_length=limit_page_length
         )
-    elif parent_type.name in ("SET_VALUE_TYPE", "SAVE_DOC_TYPE"):
+    elif parent_type.name in ("SET_VALUE_TYPE", "SAVE_DOC_TYPE", "DELETE_DOC_TYPE"):
         # This section is executed on mutation return types
         return (obj or {}).get(info.field_name, None)
     elif (obj.get("doctype") and obj.get("name")) or get_doctype(parent_type.name):
@@ -81,6 +81,7 @@ def bind_mutation_resolvers(schema: GraphQLSchema):
     mutation_type = schema.mutation_type
     mutation_type.fields["setValue"].resolve = set_value_resolver
     mutation_type.fields["saveDoc"].resolve = save_doc_resolver
+    mutation_type.fields["deleteDoc"].resolve = delete_doc_resolver
 
     SET_VALUE_TYPE: GraphQLObjectType = mutation_type.fields["setValue"].type
     SAVE_DOC_TYPE: GraphQLObjectType = mutation_type.fields["saveDoc"].type
@@ -129,6 +130,22 @@ def save_doc_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         "doctype": doc.doctype,
         "name": doc.name,
         "doc": doc.as_dict()
+    }
+
+def delete_doc_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
+    doctype = kwargs["doctype"]
+    name = kwargs["name"]
+    success  = False
+    try:
+        doc = frappe.get_doc(doctype, name)
+        doc.delete()
+        success = True
+    except Exception as e:
+        pass
+    return {
+        "doctype": doctype,
+        "name": name,
+        "success": success
     }
 
 
