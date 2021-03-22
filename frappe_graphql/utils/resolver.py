@@ -135,17 +135,12 @@ def save_doc_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
 def delete_doc_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
     doctype = kwargs["doctype"]
     name = kwargs["name"]
-    success  = False
-    try:
-        doc = frappe.get_doc(doctype, name)
-        doc.delete()
-        success = True
-    except Exception as e:
-        pass
+    doc = frappe.get_doc(doctype, name)
+    doc.delete()
     return {
         "doctype": doctype,
         "name": name,
-        "success": success
+        "success": True
     }
 
 
