@@ -9,7 +9,6 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
     parent_type: GraphQLObjectType = info.parent_type
     if not isinstance(info.parent_type, GraphQLObjectType):
         frappe.throw("Invalid GraphQL")
-
     if parent_type.name == "Query":
         # This section is executed on root query type fields
         doctype = get_doctype(info.field_name)
@@ -35,14 +34,14 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         return (obj or {}).get(info.field_name, None)
     elif (obj.get("doctype") and obj.get("name")) or get_doctype(parent_type.name):
         # this section is executed for Fields on DocType object types.
-        doctype = obj.doctype or get_doctype(parent_type.name)
+        doctype = obj.get('doctype') or get_doctype(parent_type.name)
         if not doctype:
             return None
 
         if not frappe.has_permission(doctype=doctype):
             raise frappe.PermissionError("No read permission for doctype " + doctype)
 
-        cached_doc = frappe.get_cached_doc(doctype, obj.name)
+        cached_doc = frappe.get_cached_doc(doctype, obj.get("name"))
         meta = frappe.get_meta(doctype)
 
         df = meta.get_field(info.field_name)
