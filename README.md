@@ -108,7 +108,7 @@ Result
 ## RolePermission integration
 Data is returned based on Read access to the resource
 
-## Generic Mutations: set_value & save_doc
+## Generic Mutations: set_value , save_doc & delete_doc
 - SetValue
 #### Query
 ```graphql
@@ -194,6 +194,37 @@ mutation SAVE_DOC($doctype: String!, $doc: String!){
             }
         }
     }
+}
+```
+
+- Delete Doc
+#### Query
+```graphql
+mutation DELETE_DOC($doctype: String!, $name: String!) {
+    deleteDoc(doctype: $doctype, name: $name) {
+        doctype,
+        name,
+        success
+    }
+}
+```
+#### Variables
+```json
+{
+  "doctype":  "Test Doctype",
+  "name": "Example Doc"
+}
+```
+#### Response
+```json
+{
+  "data": {
+    "deleteDoc": {
+      "doctype": "Test Doctype",
+      "name": "Example Doc",
+      "success": true
+    }
+  }
 }
 ```
 
