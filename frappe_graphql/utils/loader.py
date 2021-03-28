@@ -22,7 +22,8 @@ def get_schema():
 
 def get_typedefs():
     target_dir = frappe.get_site_path("doctype_sdls")
-    schema = load_schema_from_path(target_dir)
+    schema = load_schema_from_path(target_dir) if os.path.isdir(
+        target_dir) else ""
 
     for dir in frappe.get_hooks("graphql_sdl_dir"):
         dir = os.path.abspath(frappe.get_app_path("frappe", "../..", dir))
