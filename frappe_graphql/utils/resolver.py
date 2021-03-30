@@ -43,6 +43,8 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         if role_permissions.get("if_owner", {}).get("read"):
             if cached_doc.get("owner") != frappe.session.user:
                 frappe.throw(_("No permission for {0}").format(doctype + " " + obj.get("name")))
+        # apply field level read perms
+        cached_doc.apply_fieldlevel_read_permissions()
         meta = frappe.get_meta(doctype)
 
         df = meta.get_field(info.field_name)
