@@ -1,7 +1,7 @@
 from typing import Any
 import frappe
 from frappe.model import default_fields
-
+from frappe import _
 from graphql import GraphQLObjectType, GraphQLResolveInfo, GraphQLSchema
 
 
@@ -12,8 +12,7 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
     if parent_type.name == "Query":
         # This section is executed on root query type fields
         doctype = get_doctype(info.field_name)
-        if not frappe.has_permission(doctype=doctype):
-            raise frappe.PermissionError("No read permission for doctype " + doctype)
+        frappe.has_permission(doctype=doctype, throw=True)
         filters = frappe._dict()
         limit_start = kwargs.pop("limit_start") or 0
         limit_page_length = kwargs.pop("limit_page_length") or 20
@@ -37,11 +36,13 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         doctype = obj.get('doctype') or get_doctype(parent_type.name)
         if not doctype:
             return None
-
-        if not frappe.has_permission(doctype=doctype):
-            raise frappe.PermissionError("No read permission for doctype " + doctype)
-
+        frappe.has_permission(doctype=doctype, doc=obj.get("name"), throw=True)
         cached_doc = frappe.get_cached_doc(doctype, obj.get("name"))
+        # verbose check of is_owner of doc
+        role_permissions = frappe.permissions.get_role_permissions(doctype)
+        if role_permissions.get("if_owner", {}).get("read"):
+            if cached_doc.get("owner") != frappe.session.user:
+                frappe.throw(_("No permission for {0}").format(doctype + " " + obj.get("name")))
         meta = frappe.get_meta(doctype)
 
         df = meta.get_field(info.field_name)
