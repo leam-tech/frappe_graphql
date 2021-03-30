@@ -1,9 +1,11 @@
 import os
 import frappe
 from frappe.model import display_fieldtypes, table_fields, default_fields
+from frappe.utils import cint
 
 
-def make_doctype_sdl_files(target_dir, app=None, modules=[], doctypes=[], ignore_root_file=False):
+def make_doctype_sdl_files(target_dir, app=None, modules=[], doctypes=[],
+                           ignore_root_file=False, ignore_custom_fields=False):
     doctypes = get_doctypes(
         app=app,
         modules=modules,
@@ -22,7 +24,7 @@ def make_doctype_sdl_files(target_dir, app=None, modules=[], doctypes=[], ignore
         write_file("root", get_root_sdl())
 
     for doctype in doctypes:
-        sdl = get_doctype_sdl(doctype)
+        sdl = get_doctype_sdl(doctype, ignore_custom_fields)
         write_file(doctype, sdl)
 
 
@@ -83,7 +85,7 @@ def get_root_sdl():
     return sdl
 
 
-def get_doctype_sdl(doctype):
+def get_doctype_sdl(doctype, ignore_custom_fields=False):
     meta = frappe.get_meta(doctype)
     sdl = f"type {doctype.replace(' ', '')} implements BaseDocType {{"
 
@@ -105,12 +107,28 @@ def get_doctype_sdl(doctype):
             continue
         if field.fieldname in defined_fieldnames:
             continue
+        if cint(field.get("is_custom_field")):
+            continue
         defined_fieldnames.append(field.fieldname)
         sdl += f"\n  {get_field_sdl(field)}"
         if field.fieldtype == "Link":
             sdl += f"\n  {get_link_field_name_sdl(field)}"
 
     sdl += "\n}"
+
+    # Extend Doctype with Custom Fields
+    if not ignore_custom_fields and len(meta.get_custom_fields()):
+        sdl += f"\n\nextend type {doctype.replace(' ', '')} {{"
+        for field in meta.get_custom_fields():
+            if field.fieldtype in display_fieldtypes:
+                continue
+            if field.fieldname in defined_fieldnames:
+                continue
+            defined_fieldnames.append(field.fieldname)
+            sdl += f"\n  {get_field_sdl(field)}"
+            if field.fieldtype == "Link":
+                sdl += f"\n  {get_link_field_name_sdl(field)}"
+        sdl += "\n}"
 
     # Extend QueryType
     sdl += "\n\nextend type Query {"
