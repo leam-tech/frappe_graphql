@@ -3,18 +3,32 @@ import frappe
 from typing import Generator
 
 import graphql
+from frappe.utils import cint
 from graphql import parse
 from graphql.error import GraphQLSyntaxError
 
 from .exceptions import GraphQLFileSyntaxError
 from .resolver import bind_mutation_resolvers
 
+FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY = "graphql_schema"
+
 
 def get_schema():
-    schema = get_typedefs()
-
-    ast_doc = graphql.parse(schema)
-    schema = graphql.build_ast_schema(ast_doc)
+    # cache the schema in redis..
+    # to manually clear all cache from redis frappe.cache().flushall()
+    # or frappe.cache().flushdb() will do.
+    schema = frappe.cache().get_value(
+        FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY) or get_typedefs()
+    if not frappe.cache().get_value(FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY):
+        frappe.cache().set_value(FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY, schema)
+    developer_mode = frappe.conf.get('developer_mode')
+    build_schema_kwargs = {}
+    # in developer mode we validate the following in build schema
+    # but not in production.
+    if not cint(developer_mode):
+        build_schema_kwargs = {"assume_valid": True,
+                               "assume_valid_sdl": True, "no_location": True}
+    schema = graphql.build_schema(schema, **build_schema_kwargs)
     bind_mutation_resolvers(schema=schema)
     execute_schema_processors(schema=schema)
     return schema
@@ -41,7 +55,8 @@ def execute_schema_processors(schema):
 
 def load_schema_from_path(path: str) -> str:
     if os.path.isdir(path):
-        schema_list = [read_graphql_file(f) for f in sorted(walk_graphql_files(path))]
+        schema_list = [read_graphql_file(f) for f in
+                       sorted(walk_graphql_files(path))]
         return "\n".join(schema_list)
     return read_graphql_file(os.path.abspath(path))
 

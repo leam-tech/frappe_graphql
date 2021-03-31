@@ -142,3 +142,5 @@ override_whitelisted_methods = {
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]
+
+clear_cache = "frappe_graphql.cache.clear_cache"
