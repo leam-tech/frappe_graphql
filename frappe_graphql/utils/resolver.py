@@ -37,6 +37,7 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         if not doctype:
             return None
         frappe.has_permission(doctype=doctype, doc=obj.get("name"), throw=True)
+
         cached_doc = frappe.get_cached_doc(doctype, obj.get("name"))
         # verbose check of is_owner of doc
         role_permissions = frappe.permissions.get_role_permissions(doctype)
@@ -56,6 +57,8 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
             fieldname = info.field_name.split("__name")[0]
             return cached_doc.get(fieldname)
         elif df and df.fieldtype == "Link":
+            if not cached_doc.get(df.fieldname):
+                return None
             return frappe._dict(name=cached_doc.get(df.fieldname), doctype=df.options)
         else:
             return cached_doc.get(info.field_name)
@@ -133,6 +136,7 @@ def save_doc_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         "name": doc.name,
         "doc": doc.as_dict()
     }
+
 
 def delete_doc_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
     doctype = kwargs["doctype"]
