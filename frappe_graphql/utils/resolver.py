@@ -32,6 +32,11 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         # This section is executed on mutation return types
         return (obj or {}).get(info.field_name, None)
     elif (obj.get("doctype") and obj.get("name")) or get_doctype(parent_type.name):
+        # check if requested field can be resolved
+        resolved_field_name = (obj or {}).get(info.field_name)
+        if resolved_field_name:
+            return resolved_field_name
+
         # this section is executed for Fields on DocType object types.
         doctype = obj.get('doctype') or get_doctype(parent_type.name)
         if not doctype:
@@ -56,9 +61,6 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         if info.field_name.endswith("__name"):
             fieldname = info.field_name.split("__name")[0]
             return cached_doc.get(fieldname)
-
-        if (obj or {}).get(info.field_name):
-            return (obj or {}).get(info.field_name)
 
         elif df and df.fieldtype == "Link":
             if not cached_doc.get(df.fieldname):
