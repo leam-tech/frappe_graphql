@@ -56,6 +56,10 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         if info.field_name.endswith("__name"):
             fieldname = info.field_name.split("__name")[0]
             return cached_doc.get(fieldname)
+
+        if (obj or {}).get(info.field_name):
+            return (obj or {}).get(info.field_name)
+
         elif df and df.fieldtype == "Link":
             if not cached_doc.get(df.fieldname):
                 return None
