@@ -33,9 +33,10 @@ def default_doctype_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         return (obj or {}).get(info.field_name, None)
     elif (obj.get("doctype") and obj.get("name")) or get_doctype(parent_type.name):
         # check if requested field can be resolved
-        resolved_field_name = (obj or {}).get(info.field_name)
-        if resolved_field_name:
-            return resolved_field_name
+        if isinstance(obj, dict):
+            resolved_field_name = (obj or {}).get(info.field_name)
+            if resolved_field_name:
+                return resolved_field_name
 
         # this section is executed for Fields on DocType object types.
         doctype = obj.get('doctype') or get_doctype(parent_type.name)
