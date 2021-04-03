@@ -8,7 +8,7 @@ from graphql import parse
 from graphql.error import GraphQLSyntaxError
 
 from .exceptions import GraphQLFileSyntaxError
-from .resolver import bind_mutation_resolvers
+from .resolver.mutations import bind_mutation_resolvers
 
 FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY = "graphql_schema"
 
