@@ -3,14 +3,12 @@ import frappe
 from typing import Generator
 
 import graphql
-from frappe.utils import cint
 from graphql import parse
 from graphql.error import GraphQLSyntaxError
 
 from .exceptions import GraphQLFileSyntaxError
 from .resolver.mutations import bind_mutation_resolvers
 
-FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY = "graphql_schema"
 graphql_schema = None
 
 
