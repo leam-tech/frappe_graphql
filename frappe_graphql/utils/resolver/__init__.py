@@ -32,6 +32,17 @@ def default_field_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
                 **kwargs
             )
 
+    if not isinstance(obj, dict):
+        return None
+
+    # check if requested field can be resolved
+    # - default resolver for simple objects
+    # - these form the resolvers for
+    #   "SET_VALUE_TYPE", "SAVE_DOC_TYPE", "DELETE_DOC_TYPE" mutations
+    resolved_field_name = (obj or {}).get(info.field_name)
+    if resolved_field_name:
+        return resolved_field_name
+
     if obj.get("name") and (obj.get("doctype") or get_singular_doctype(parent_type.name)):
         # this section is executed for Fields on DocType object types.
         return document_resolver(
@@ -40,10 +51,4 @@ def default_field_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
             **kwargs
         )
 
-    try:
-        # - default resolver for simple objects
-        # - these form the resolvers for
-        #   "SET_VALUE_TYPE", "SAVE_DOC_TYPE", "DELETE_DOC_TYPE" mutations
-        return (obj or {}).get(info.field_name)
-    except Exception:
-        return None
+    return None

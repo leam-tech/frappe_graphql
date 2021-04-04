@@ -13,12 +13,6 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
 
     frappe.has_permission(doctype=doctype, doc=obj.get("name"), throw=True)
 
-    # check if requested field can be resolved
-    if isinstance(obj, dict):
-        resolved_field_name = (obj or {}).get(info.field_name)
-        if resolved_field_name:
-            return resolved_field_name
-
     cached_doc = frappe.get_cached_doc(doctype, obj.get("name"))
     # verbose check of is_owner of doc
     role_permissions = frappe.permissions.get_role_permissions(doctype)
