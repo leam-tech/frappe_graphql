@@ -29,18 +29,18 @@ def list_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     limit = (first or last) + 1
     requested_count = first or last
 
-    filters = process_filters(doctype, filters)
+    filters = process_filters(filters)
     count = get_count(doctype, filters)
 
     if cursor:
         # Cursor filter should be applied after taking count
         has_previous_page = True
         cursor = from_cursor(cursor)
-        filters.append(get_db_filter(doctype, [
+        filters.append([
             sort_key,
             ">" if after else "<",
             cursor[0]
-        ]))
+        ])
 
     data = get_data(doctype, filters, sort_key, sort_dir, limit)
     matched_count = len(data)
@@ -84,38 +84,38 @@ def _validate_connection_args(args):
         raise GraphQLError("Argument `last` cannot be combined with `after`.")
 
 
-def process_filters(doctype, input_filters):
+def process_filters(input_filters):
     filters = []
     operator_map = frappe._dict(
         EQ="=", NEQ="!=", LT="<", GT=">", LTE="<=", GTE=">=",
         LIKE="like", NOT_LIKE="not like"
     )
     for f in input_filters:
-        filters.append(get_db_filter(doctype, [
+        filters.append([
             f.get("fieldname"),
             operator_map[f.get("operator")],
             f.get("value")
-        ]))
+        ])
 
     return filters
 
 
 def get_count(doctype, filters):
-    return frappe.db.sql(f"""
-        SELECT COUNT(*)
-        FROM `tab{doctype}`
-        {"WHERE {}".format(" AND ".join(filters)) if len(filters) else ""}
-    """)[0][0]
+    return frappe.get_list(
+        doctype,
+        fields=["COUNT(*) as total_count"],
+        filters=filters
+    )[0].total_count
 
 
 def get_data(doctype, filters, sort_key, sort_dir, limit):
-    return frappe.db.sql(f"""
-        SELECT name, "{doctype}" as doctype, {sort_key}
-        FROM `tab{doctype}`
-        {"WHERE {}".format(" AND ".join(filters)) if len(filters) else ""}
-        ORDER BY {sort_key} {sort_dir}
-        LIMIT {limit}
-    """, as_dict=1)
+    return frappe.get_list(
+        doctype,
+        fields=["name", f"\"{doctype}\" as doctype", sort_key],
+        filters=filters,
+        order_by=f"{sort_key} {sort_dir}",
+        limit_page_length=limit
+    )
 
 
 def get_db_filter(doctype, filter):
