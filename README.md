@@ -17,13 +17,20 @@ and start making your graphql requests against:
 ```
 
 # Features
-## Filtering
-You can filter any doctype by its `name`, `standard_filters` or with a `filters` json
-
-Filtering by name is straight forward:
-```graphql
+## Getting single Document and getting a filtered doctype list
+You can get a single document by its name using `<doctype>` query.  
+```
 {
     User(name: "Administrator") {
+        name,
+        email
+    }
+}
+```
+You can get a list of documents by querying `<doctype-plural>`. You can also pass in filters and sorting details as arguments:
+```graphql
+{
+    Users(filter: [["name", "like", "%a%"]], sortBy: { field: NAME, direction: ASC }) {
         name,
         email,
         roles {
@@ -32,28 +39,8 @@ Filtering by name is straight forward:
     }
 }
 ```
-For standard filters, lets take a look at the User doctype. It has 3 standard filters:
-- `full_name`
-- `username`
-- `user_type`
-
-It is possible to query them like this:
-```graphql
-{
-    User(full_name: "Test A") {
-        name, email
-    }
-}
-```
-
-And with `filters` json dict:
-```graphql
-{
-    User(filters: "{ \"full_name\": [\"LIKE\", \"%TEST%\"] }") {
-        name, email
-    }
-}
-```  
+For sort by fields, only those fields that are search_indexed / unique can be used. NAME, CREATION & MODIFIED can also be used
+  
 ## Access Field Linked Documents in nested queries
 All Link fields return respective doc. Add `__name` suffix to the link field name to get the link name.
 ```
@@ -108,136 +95,13 @@ Result
 ## RolePermission integration
 Data is returned based on Read access to the resource
 
-## Generic Mutations: set_value , save_doc & delete_doc
-- SetValue
-#### Query
-```graphql
-mutation SET_VALUE($doctype: String!, $name: String!, $fieldname: String!, $value: String!) {
-    setValue(doctype: $doctype, name: $name, fieldname: $fieldname, value: $value) {
-        doctype,
-        name,
-        fieldname,
-        value,
-        doc {
-            name,
-            ...on User {
-                first_name,
-                last_name,
-                full_name
-            }
-        }
-    }
-}
-```
-#### Variables
-```json
-{
-    "doctype": "User",
-    "name": "test@test.com",
-    "fieldname": "first_name",
-    "value": "Test X"
-}
-```
-#### Response
-```json
-{
-    "data": {
-        "setValue": {
-            "doctype": "User",
-            "name": "test@test.com",
-            "fieldname": "first_name",
-            "value": "Test",
-            "doc": {
-                "name": "test@test.com",
-                "first_name": "Test X",
-                "last_name": "Test A",
-                "full_name": "Test X Test A"
-            }
-        }
-    }
-}
-```
-
-- Save Doc
-#### Query
-```graphql
-mutation SAVE_DOC($doctype: String!, $doc: String!){
-    saveDoc(doctype: $doctype, doc: $doc){
-        doctype,
-        name,
-        doc {
-            name,
-            ... on ToDo {
-                priority
-            }
-        }
-    }
-}
-```
-#### Variables
-```json
-{
-    "doctype":"ToDo",
-    "doc": "{ \"priority\": \"High\", \"description\": \"Test Todo 1\" }"
-}
-```
-#### Response
-```json
-{
-    "data": {
-        "saveDoc": {
-            "doctype": "ToDo",
-            "name": "122cec40d0",
-            "doc": {
-                "name": "122cec40d0",
-                "priority": "High"
-            }
-        }
-    }
-}
-```
-
-- Delete Doc
-#### Query
-```graphql
-mutation DELETE_DOC($doctype: String!, $name: String!) {
-    deleteDoc(doctype: $doctype, name: $name) {
-        doctype,
-        name,
-        success
-    }
-}
-```
-#### Variables
-```json
-{
-  "doctype":  "Test Doctype",
-  "name": "Example Doc"
-}
-```
-#### Response
-```json
-{
-  "data": {
-    "deleteDoc": {
-      "doctype": "Test Doctype",
-      "name": "Example Doc",
-      "success": true
-    }
-  }
-}
-```
+## Standard Mutations: set_value , save_doc & delete_doc
+- [SET_VALUE Mutation](./docs/SET_VALUE.md)
+- [SAVE_DOC Mutation](./docs/SAVE_DOC.md)
+- [DELETE_DOC Mutation](./docs/DELETE_DOC.md)
 
 ## Pagination
-`limit_start` & `limit_page_length` could be passed to paginate through the doctypes
-#### Query
-```graphql
-{
-    User(limit_start: 0, limit_page_length: 10) {
-        name
-    }
-}
-```
+Cursor based pagination is implemented. You can read more about it here: [Cursor Based Pagination](./docs/cursor_pagination.md)
 
 ## Support Extensions via Hooks
 You can extend the SDLs with additional query / mutations / subscriptions. Examples are provided for a specific set of Scenarios. Please read [GraphQL Spec](http://spec.graphql.org/June2018/#sec-Object-Extensions) regarding Extending types. There are mainly two hooks introduced:
