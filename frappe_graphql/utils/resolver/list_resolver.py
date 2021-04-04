@@ -9,6 +9,8 @@ def list_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     doctype = kwargs["doctype"]
     frappe.has_permission(doctype=doctype, throw=True)
 
+    has_next_page = False
+    has_previous_page = False
     before = kwargs.get("before")
     after = kwargs.get("after")
     first = kwargs.get("first")
@@ -24,18 +26,15 @@ def list_resolver(obj, info: GraphQLResolveInfo, **kwargs):
         sort_dir = "desc"
 
     cursor = after or before
-    limit = first or last
+    limit = (first or last) + 1
+    requested_count = first or last
 
     filters = process_filters(doctype, filters)
-
-    count = frappe.db.sql(f"""
-        SELECT COUNT(*)
-        FROM `tab{doctype}`
-        {"WHERE {}".format(" AND ".join(filters)) if len(filters) else ""}
-    """)[0][0]
+    count = get_count(doctype, filters)
 
     if cursor:
         # Cursor filter should be applied after taking count
+        has_previous_page = True
         cursor = from_cursor(cursor)
         filters.append(get_db_filter(doctype, [
             sort_key,
@@ -43,29 +42,23 @@ def list_resolver(obj, info: GraphQLResolveInfo, **kwargs):
             cursor[0]
         ]))
 
-    data = frappe.db.sql(f"""
-        SELECT name, "{doctype}" as doctype, {sort_key}
-        FROM `tab{doctype}`
-        {"WHERE {}".format(" AND ".join(filters)) if len(filters) else ""}
-        ORDER BY {sort_key} {sort_dir}
-        LIMIT {limit}
-    """, as_dict=1)
-
+    data = get_data(doctype, filters, sort_key, sort_dir, limit)
+    matched_count = len(data)
+    if matched_count > requested_count:
+        has_next_page = True
+        data.pop()
     if sort_dir != original_sort_dir:
         data = reversed(data)
 
-    edges = [
-        frappe._dict(
-            cursor=to_cursor(x, sort_key=sort_key),
-            node=x
-        ) for x in data
-    ]
+    edges = [frappe._dict(
+        cursor=to_cursor(x, sort_key=sort_key), node=x
+    ) for x in data]
 
     return frappe._dict(
         totalCount=count,
         pageInfo=frappe._dict(
-            hasNextPage=True,
-            hasPreviousPage=True,
+            hasNextPage=has_next_page,
+            hasPreviousPage=has_previous_page,
             startCursor=edges[0].cursor if len(edges) else None,
             endCursor=edges[-1].cursor if len(edges) else None
         ),
@@ -105,6 +98,24 @@ def process_filters(doctype, input_filters):
         ]))
 
     return filters
+
+
+def get_count(doctype, filters):
+    return frappe.db.sql(f"""
+        SELECT COUNT(*)
+        FROM `tab{doctype}`
+        {"WHERE {}".format(" AND ".join(filters)) if len(filters) else ""}
+    """)[0][0]
+
+
+def get_data(doctype, filters, sort_key, sort_dir, limit):
+    return frappe.db.sql(f"""
+        SELECT name, "{doctype}" as doctype, {sort_key}
+        FROM `tab{doctype}`
+        {"WHERE {}".format(" AND ".join(filters)) if len(filters) else ""}
+        ORDER BY {sort_key} {sort_dir}
+        LIMIT {limit}
+    """, as_dict=1)
 
 
 def get_db_filter(doctype, filter):
