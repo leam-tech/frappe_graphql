@@ -39,9 +39,8 @@ def default_field_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
     # - default resolver for simple objects
     # - these form the resolvers for
     #   "SET_VALUE_TYPE", "SAVE_DOC_TYPE", "DELETE_DOC_TYPE" mutations
-    resolved_field_name = (obj or {}).get(info.field_name)
-    if resolved_field_name:
-        return resolved_field_name
+    if info.field_name in obj:
+        return obj.get(info.field_name)
 
     if obj.get("name") and (obj.get("doctype") or get_singular_doctype(parent_type.name)):
         # this section is executed for Fields on DocType object types.
