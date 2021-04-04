@@ -8,7 +8,7 @@ from graphql import parse
 from graphql.error import GraphQLSyntaxError
 
 from .exceptions import GraphQLFileSyntaxError
-from .resolver import bind_mutation_resolvers
+from .resolver.mutations import bind_mutation_resolvers
 
 FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY = "graphql_schema"
 
@@ -21,6 +21,7 @@ def get_schema():
         FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY) or get_typedefs()
     if not frappe.cache().get_value(FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY):
         frappe.cache().set_value(FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY, schema)
+
     developer_mode = frappe.conf.get('developer_mode')
     build_schema_kwargs = {}
     # in developer mode we validate the following in build schema
@@ -29,6 +30,8 @@ def get_schema():
         build_schema_kwargs = {"assume_valid": True,
                                "assume_valid_sdl": True, "no_location": True}
     schema = graphql.build_schema(schema, **build_schema_kwargs)
+
+    schema.query_type.fields["ping"].resolve = lambda obj, info: "pong"
     bind_mutation_resolvers(schema=schema)
     execute_schema_processors(schema=schema)
     return schema
