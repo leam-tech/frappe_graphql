@@ -31,11 +31,21 @@ You can get a list of documents by querying `<doctype-plural>`. You can also pas
 ```graphql
 {
     Users(filter: [["name", "like", "%a%"]], sortBy: { field: NAME, direction: ASC }) {
-        name,
-        email,
-        roles {
-            role
+        totalCount,
+        pageInfo {
+            hasNextPage,
+            hasPreviousPage,
+            startCursor,
+            endCursor
+        },
+        edges {
+            cursor,
+            node {
+                name,
+                first_name
+            }
         }
+    }
     }
 }
 ```
