@@ -3,37 +3,27 @@ import frappe
 from typing import Generator
 
 import graphql
-from frappe.utils import cint
 from graphql import parse
 from graphql.error import GraphQLSyntaxError
 
 from .exceptions import GraphQLFileSyntaxError
 from .resolver.mutations import bind_mutation_resolvers
 
-FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY = "graphql_schema"
+graphql_schema = None
 
 
 def get_schema():
-    # cache the schema in redis..
-    # to manually clear all cache from redis frappe.cache().flushall()
-    # or frappe.cache().flushdb() will do.
-    schema = frappe.cache().get_value(
-        FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY) or get_typedefs()
-    if not frappe.cache().get_value(FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY):
-        frappe.cache().set_value(FRAPPE_GRAPHQL_SCHEMA_REDIS_KEY, schema)
+    global graphql_schema
 
-    developer_mode = frappe.conf.get('developer_mode')
-    build_schema_kwargs = {}
-    # in developer mode we validate the following in build schema
-    # but not in production.
-    if not cint(developer_mode):
-        build_schema_kwargs = {"assume_valid": True,
-                               "assume_valid_sdl": True, "no_location": True}
-    schema = graphql.build_schema(schema, **build_schema_kwargs)
+    if graphql_schema is not None:
+        return graphql_schema
+
+    schema = graphql.build_schema(get_typedefs())
 
     schema.query_type.fields["ping"].resolve = lambda obj, info: "pong"
     bind_mutation_resolvers(schema=schema)
     execute_schema_processors(schema=schema)
+    graphql_schema = schema
     return schema
 
 
