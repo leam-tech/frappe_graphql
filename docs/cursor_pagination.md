@@ -2,8 +2,13 @@
 You can pass in `first`, `last`, `after` and `before`  
 [GraphQL Documentation on Pagination](https://graphql.org/learn/pagination/)
 
+If you want to implement the same in one of your Custom queries, please check out the example here: [Custom & Nested Pagination](./nested_pagination.md)
+
 Example:
-#### Query
+<details>
+<summary>Query</summary>
+<p>
+
 ```graphql
 {
     Users(first: 10) {
@@ -24,8 +29,13 @@ Example:
     }
 }
 ```
+</p>
+</details>
 
-#### Response
+<details>
+<summary>Response</summary>
+<p>
+
 ```json
 {
     "data": {
@@ -64,3 +74,5 @@ Example:
     }
 }
 ```
+</p>
+</details>
