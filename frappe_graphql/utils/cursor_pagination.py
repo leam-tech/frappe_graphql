@@ -38,10 +38,10 @@ class CursorPaginator(object):
         self.validate_connection_args(kwargs)
 
         original_sort_dir = sort_dir
-        if last and sort_dir == "asc":
+        if last:
             # to get LAST, we swap the sort order
             # data will be reversed after fetch
-            sort_dir = "desc"
+            sort_dir = "desc" if sort_dir == "asc" else "asc"
 
         cursor = after or before
         limit = (first or last) + 1
@@ -60,7 +60,8 @@ class CursorPaginator(object):
             }
             filters.append([
                 sort_key,
-                operator_map["after"][sort_dir] if after else operator_map["before"][sort_dir],
+                operator_map["after"][original_sort_dir]
+                if after else operator_map["before"][original_sort_dir],
                 cursor[0]
             ])
 
