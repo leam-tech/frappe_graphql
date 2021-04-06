@@ -9,12 +9,14 @@ class CursorPaginator(object):
             self,
             doctype,
             filters=None,
+            skip_process_filters=False,
             count_resolver=None,
             node_resolver=None,
             extra_args=None):
 
         self.doctype = doctype
         self.predefined_filters = filters
+        self.skip_process_filters = skip_process_filters
         self.custom_count_resolver = count_resolver
         self.custom_node_resolver = node_resolver
         self.extra_args = extra_args
@@ -47,7 +49,9 @@ class CursorPaginator(object):
         limit = (first or last) + 1
         requested_count = first or last
 
-        filters = self.process_filters(filters)
+        if not self.skip_process_filters:
+            filters = self.process_filters(filters)
+
         count = self.get_count(self.doctype, filters)
 
         if cursor:
@@ -153,11 +157,14 @@ class CursorPaginator(object):
             LIKE="like", NOT_LIKE="not like"
         )
         for f in input_filters:
-            filters.append([
-                f.get("fieldname"),
-                operator_map[f.get("operator")],
-                f.get("value")
-            ])
+            if not isinstance(f, dict):
+                filters.append(f)
+            else:
+                filters.append([
+                    f.get("fieldname"),
+                    operator_map[f.get("operator")],
+                    f.get("value")
+                ])
 
         return filters
 
