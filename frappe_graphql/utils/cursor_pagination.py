@@ -134,7 +134,7 @@ class CursorPaginator(object):
 
         return frappe.get_list(
             doctype,
-            fields=["name", f"\"{doctype}\" as doctype", sort_key],
+            fields=["name", f"SUBSTR(\".{doctype}\", 2) as doctype", sort_key],
             filters=filters,
             order_by=f"{sort_key} {sort_dir}",
             limit_page_length=limit
