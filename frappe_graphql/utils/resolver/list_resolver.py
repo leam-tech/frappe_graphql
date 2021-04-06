@@ -24,6 +24,8 @@ def list_resolver(obj, info: GraphQLResolveInfo, **kwargs):
         # to get LAST, we swap the sort order
         # data will be reversed after fetch
         sort_dir = "desc"
+    if last and sort_dir == "desc":
+        sort_dir = "asc"
 
     cursor = after or before
     limit = (first or last) + 1
@@ -38,7 +40,7 @@ def list_resolver(obj, info: GraphQLResolveInfo, **kwargs):
         cursor = from_cursor(cursor)
         filters.append([
             sort_key,
-            ">" if after else "<",
+            ">" if sort_dir == "asc" else "<",
             cursor[0]
         ])
 
