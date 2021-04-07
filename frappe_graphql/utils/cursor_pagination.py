@@ -14,6 +14,10 @@ class CursorPaginator(object):
             node_resolver=None,
             extra_args=None):
 
+        if (not count_resolver) != (not node_resolver):
+            frappe.throw(
+                "Please provide both count_resolver & node_resolver to have custom implementation")
+
         self.doctype = doctype
         self.predefined_filters = filters
         self.skip_process_filters = skip_process_filters
