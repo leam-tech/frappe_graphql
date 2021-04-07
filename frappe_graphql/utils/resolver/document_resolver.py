@@ -30,7 +30,7 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
 
     def _get_value(fieldname):
         # Preference to fetch from obj first, cached_doc later
-        if fieldname in obj:
+        if obj.get(fieldname) is not None:
             return obj.get(fieldname)
         return cached_doc.get(fieldname)
 

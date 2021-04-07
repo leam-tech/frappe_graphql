@@ -2,6 +2,7 @@ from typing import Any
 from graphql import GraphQLObjectType, GraphQLResolveInfo
 
 import frappe
+from frappe.model.document import Document
 
 from frappe_graphql import CursorPaginator
 from .document_resolver import document_resolver
@@ -28,17 +29,17 @@ def default_field_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
             frappe.has_permission(doctype=plural_doctype, throw=True)
             return CursorPaginator(doctype=plural_doctype).resolve(obj, info, **kwargs)
 
-    if not isinstance(obj, dict):
+    if not isinstance(obj, (dict, Document)):
         return None
 
-    should_resolve_from_doc = obj.get("name") and (
-        obj.get("doctype") or get_singular_doctype(parent_type.name))
+    should_resolve_from_doc = not not (obj.get("name") and (
+        obj.get("doctype") or get_singular_doctype(parent_type.name)))
 
     # check if requested field can be resolved
     # - default resolver for simple objects
     # - these form the resolvers for
     #   "SET_VALUE_TYPE", "SAVE_DOC_TYPE", "DELETE_DOC_TYPE" mutations
-    if info.field_name in obj:
+    if obj.get(info.field_name) is not None:
         value = obj.get(info.field_name)
         if isinstance(value, CursorPaginator):
             return value.resolve(obj, info, **kwargs)
