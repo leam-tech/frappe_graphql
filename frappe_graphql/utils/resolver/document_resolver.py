@@ -28,15 +28,21 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
         if info.field_name in default_fields:
             df = get_default_field_df(info.field_name)
 
+    def _get_value(fieldname):
+        # Preference to fetch from obj first, cached_doc later
+        if obj.get(fieldname) is not None:
+            return obj.get(fieldname)
+        return cached_doc.get(fieldname)
+
     if info.field_name.endswith("__name"):
         fieldname = info.field_name.split("__name")[0]
-        return cached_doc.get(fieldname)
+        return _get_value(fieldname)
     elif df and df.fieldtype == "Link":
-        if not cached_doc.get(df.fieldname):
+        if not _get_value(df.fieldname):
             return None
-        return frappe._dict(name=cached_doc.get(df.fieldname), doctype=df.options)
+        return frappe._dict(name=_get_value(df.fieldname), doctype=df.options)
     else:
-        return cached_doc.get(info.field_name)
+        return _get_value(info.field_name)
 
 
 def get_default_field_df(fieldname):
