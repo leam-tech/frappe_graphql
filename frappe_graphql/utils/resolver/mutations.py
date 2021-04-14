@@ -8,6 +8,7 @@ def bind_mutation_resolvers(schema: GraphQLSchema):
     mutation_type.fields["setValue"].resolve = set_value_resolver
     mutation_type.fields["saveDoc"].resolve = save_doc_resolver
     mutation_type.fields["deleteDoc"].resolve = delete_doc_resolver
+    mutation_type.fields["uploadFile"].resolve = file_upload_resolver
 
     SET_VALUE_TYPE: GraphQLObjectType = mutation_type.fields["setValue"].type
     SAVE_DOC_TYPE: GraphQLObjectType = mutation_type.fields["saveDoc"].type
@@ -69,3 +70,17 @@ def delete_doc_resolver(obj, info: GraphQLResolveInfo, **kwargs):
         "name": name,
         "success": True
     }
+
+
+def file_upload_resolver(obj, info: GraphQLResolveInfo, **kwargs):
+    from frappe_graphql.utils.file import make_file_document
+
+    file_doc = make_file_document(
+        file_key=kwargs.get("file"),
+        is_private=1 if kwargs.get("is_private") else 0,
+        doctype=kwargs.get("attached_to_doctype"),
+        docname=kwargs.get("attached_to_name"),
+        fieldname=kwargs.get("fieldname"),
+    )
+
+    return file_doc

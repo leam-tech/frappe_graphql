@@ -84,6 +84,8 @@ def get_pagination_types():
 
 def get_mutations():
     return """\n
+scalar Upload
+
 type SET_VALUE_TYPE {
     doctype: String!
     name: String!
@@ -108,5 +110,7 @@ type Mutation {
     setValue(doctype: String!, name: String!, fieldname: String!, value: String): SET_VALUE_TYPE
     saveDoc(doctype: String!, doc: String!): SAVE_DOC_TYPE
     deleteDoc(doctype: String!, name: String!): DELETE_DOC_TYPE
+    uploadFile(file: Upload!, is_private: Boolean, attached_to_doctype: String,
+        attached_to_name: String, fieldname: String): File
 }
 """
