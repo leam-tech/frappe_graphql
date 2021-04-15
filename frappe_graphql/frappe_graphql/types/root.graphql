@@ -50,6 +50,9 @@ type Mutation {
 
     uploadFile(file: Upload!, is_private: Boolean, attached_to_doctype: String,
         attached_to_name: String, fieldname: String): File
+
+    addTranslation(language: String!, source_text: String!, translated_text: String!,
+      context: String, doctype: String, docname: String): Translation!
 }
 
 type Query {

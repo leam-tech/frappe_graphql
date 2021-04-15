@@ -25,6 +25,7 @@ graphql_schema_processors = [
     "frappe_graphql.frappe_graphql.mutations.delete_doc.bind",
 
     "frappe_graphql.frappe_graphql.mutations.upload_file.bind",
+    "frappe_graphql.frappe_graphql.mutations.add_translation.bind",
 ]
 
 # Includes in <head>
