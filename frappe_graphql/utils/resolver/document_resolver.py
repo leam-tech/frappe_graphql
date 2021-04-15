@@ -47,10 +47,12 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     if info.field_name.endswith("__name"):
         fieldname = info.field_name.split("__name")[0]
         return _get_value(fieldname)
-    elif df and df.fieldtype == "Link":
+    elif df and df.fieldtype in ("Link", "Dynamic Link"):
         if not _get_value(df.fieldname):
             return None
-        return frappe._dict(name=_get_value(df.fieldname), doctype=df.options)
+        link_dt = df.options if df.fieldtype == "Link" else \
+            _get_value(df.options)
+        return frappe._dict(name=_get_value(df.fieldname), doctype=link_dt)
     else:
         return _get_value(info.field_name)
 
@@ -63,5 +65,9 @@ def get_default_field_df(fieldname):
     if fieldname in ("owner", "modified_by"):
         df.fieldtype = "Link"
         df.options = "User"
+
+    if fieldname == "parent":
+        df.fieldtype = "Dynamic Link"
+        df.options = "parenttype"
 
     return df
