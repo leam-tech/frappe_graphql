@@ -19,6 +19,11 @@ and start making your graphql requests against:
 # Features
 ## Getting single Document and getting a filtered doctype list
 You can get a single document by its name using `<doctype>` query.  
+For sort by fields, only those fields that are search_indexed / unique can be used. NAME, CREATION & MODIFIED can also be used
+<details>
+<summary>Example</summary>
+
+Query
 ```
 {
     User(name: "Administrator") {
@@ -49,11 +54,16 @@ You can get a list of documents by querying `<doctype-plural>`. You can also pas
     }
 }
 ```
-For sort by fields, only those fields that are search_indexed / unique can be used. NAME, CREATION & MODIFIED can also be used
-  
+</details>
+<hr/>
+
 ## Access Field Linked Documents in nested queries
 All Link fields return respective doc. Add `__name` suffix to the link field name to get the link name.
-```
+<details>
+<summary>Example</summary>
+
+Query
+```gql
 {
     ToDo (limit_page_length: 1) {
         name,
@@ -101,17 +111,73 @@ Result
     }
 }
 ```
+</details>
+<hr/>
+
+## File Uploads
+File uploads can be done following the [GraphQL multipart request specification](https://github.com/jaydenseric/graphql-multipart-request-spec). `uploadFile` mutation is included implementing the same
+
+<details>
+<summary>Example</summary>
+
+Query
+```http
+POST /api/method/graphql HTTP/1.1
+Host: test_site:8000
+Accept: application/json
+Cookie: full_name=Administrator; sid=<sid>; system_user=yes; user_id=Administrator; user_image=
+Content-Length: 553
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="operations"
+
+{
+  "query": "mutation uploadFile($file: Upload!) { uploadFile(file: $file) { name, file_url  } }",
+  "variables": {
+    "file": null
+  }
+}
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="map"
+
+{ "0": ["variables.file"] }
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="0"; filename="/D:/faztp12/Pictures/BingImageOfTheDay_20190715.jpg"
+Content-Type: image/jpeg
+
+(data)
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+```
+
+Response
+```json
+{
+    "data": {
+        "uploadFile": {
+            "name": "ce36b2e222",
+            "file_url": "/files/BingImageOfTheDay_20190715.jpg"
+        }
+    }
+}
+```
+</details>
+
+<hr/>
 
 ## RolePermission integration
 Data is returned based on Read access to the resource
+<hr/>
 
 ## Standard Mutations: set_value , save_doc & delete_doc
 - [SET_VALUE Mutation](./docs/SET_VALUE.md)
 - [SAVE_DOC Mutation](./docs/SAVE_DOC.md)
 - [DELETE_DOC Mutation](./docs/DELETE_DOC.md)
+<hr/>
 
 ## Pagination
 Cursor based pagination is implemented. You can read more about it here: [Cursor Based Pagination](./docs/cursor_pagination.md)
+<hr/>
 
 ## Support Extensions via Hooks
 You can extend the SDLs with additional query / mutations / subscriptions. Examples are provided for a specific set of Scenarios. Please read [GraphQL Spec](http://spec.graphql.org/June2018/#sec-Object-Extensions) regarding Extending types. There are mainly two hooks introduced:
@@ -131,6 +197,7 @@ The above will look for graphql files in `your-bench/apps/your-app/your-app/gene
 - `graphql_schema_processors`  
 You can pass in a list of cmd that gets executed on schema creation. You are given `GraphQLSchema` object (please refer [graphql-core](https://github.com/graphql-python/graphql-core)) as the only parameter. You can modify it or extend it as per your requirements.
 This is a good place to attach the resolvers for the custom SDLs defined via `graphql_sdl_dir`
+<hr/>
 
 ## Examples
 ### Adding a newly created DocType
