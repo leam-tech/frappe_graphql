@@ -7,7 +7,7 @@ from graphql import parse
 from graphql.error import GraphQLSyntaxError
 
 from .exceptions import GraphQLFileSyntaxError
-from .resolver.mutations import bind_mutation_resolvers
+
 
 graphql_schema = None
 
@@ -19,10 +19,8 @@ def get_schema():
         return graphql_schema
 
     schema = graphql.build_schema(get_typedefs())
-
-    schema.query_type.fields["ping"].resolve = lambda obj, info: "pong"
-    bind_mutation_resolvers(schema=schema)
     execute_schema_processors(schema=schema)
+
     graphql_schema = schema
     return schema
 

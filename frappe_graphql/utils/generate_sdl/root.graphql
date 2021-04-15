@@ -1,0 +1,86 @@
+schema {
+	query: Query
+	mutation: Mutation
+}
+
+interface BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+}
+
+scalar Upload
+
+type SET_VALUE_TYPE {
+    doctype: String!
+    name: String!
+    fieldname: String!
+    value: String!
+    doc: BaseDocType!
+}
+
+type SAVE_DOC_TYPE {
+    doctype: String!
+    name: String!
+    doc: BaseDocType!
+}
+
+type DELETE_DOC_TYPE {
+    doctype: String!
+    name: String!
+    success: Boolean!
+}
+
+type Mutation {
+
+    # Basic Document Mutations
+    setValue(doctype: String!, name: String!, fieldname: String!, value: String): SET_VALUE_TYPE
+    saveDoc(doctype: String!, doc: String!): SAVE_DOC_TYPE
+    deleteDoc(doctype: String!, name: String!): DELETE_DOC_TYPE
+
+    uploadFile(file: Upload!, is_private: Boolean, attached_to_doctype: String,
+        attached_to_name: String, fieldname: String): File
+}
+
+type Query {
+	ping: String!
+}
+
+enum DBFilterOperator {
+  EQ
+  NEQ
+  LT
+  GT
+  LTE
+  GTE
+  LIKE
+  NOT_LIKE
+}
+
+input DBFilterInput {
+  fieldname: String!
+  operator: DBFilterOperator
+  value: String!
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}

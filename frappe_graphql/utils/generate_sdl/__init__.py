@@ -1,7 +1,6 @@
 import os
 import frappe
 
-from .root import get_root_sdl
 from .doctype import get_doctype_sdl
 
 IGNORED_DOCTYPES = [
@@ -66,3 +65,8 @@ def get_doctypes(app=None, modules=None, doctypes=[]):
         doctypes = [x.name for x in frappe.get_all("DocType")]
 
     return doctypes
+
+
+def get_root_sdl():
+    with open(os.path.join(os.path.dirname(__file__), "root.graphql"), "r") as f:
+        return f.read()
