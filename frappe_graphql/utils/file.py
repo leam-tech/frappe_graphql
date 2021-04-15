@@ -9,7 +9,7 @@ def make_file_document(file_key, doctype=None, docname=None, fieldname=None, is_
         if frappe.get_system_settings('allow_guests_to_upload_files'):
             ignore_permissions = True
         else:
-            return
+            raise frappe.PermissionError("Guest uploads are not allowed")
     else:
         user = frappe.get_doc("User", frappe.session.user)
         ignore_permissions = False
