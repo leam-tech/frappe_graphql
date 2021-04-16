@@ -16,20 +16,20 @@ def bind(schema: GraphQLSchema):
 
 
 def set_value_resolver(obj, info: GraphQLResolveInfo, **kwargs):
-    doctype = kwargs["doctype"]
-    name = kwargs["name"]
+    doctype = kwargs.get("doctype")
+    name = kwargs.get("name")
     frappe.set_value(
         doctype=doctype,
         docname=name,
-        fieldname=kwargs["fieldname"],
-        value=kwargs["value"]
+        fieldname=kwargs.get("fieldname"),
+        value=kwargs.get("value")
     )
     frappe.clear_document_cache(doctype, name)
     doc = frappe.get_doc(doctype, name).as_dict()
     return {
         "doctype": doctype,
         "name": name,
-        "fieldname": kwargs["fieldname"],
-        "value": kwargs["value"],
+        "fieldname": kwargs.get("fieldname"),
+        "value": kwargs.get("value"),
         "doc": doc
     }

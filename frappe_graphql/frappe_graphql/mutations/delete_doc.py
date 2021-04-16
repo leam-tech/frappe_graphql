@@ -8,8 +8,8 @@ def bind(schema: GraphQLSchema):
 
 
 def delete_doc_resolver(obj, info: GraphQLResolveInfo, **kwargs):
-    doctype = kwargs["doctype"]
-    name = kwargs["name"]
+    doctype = kwargs.get("doctype")
+    name = kwargs.get("name")
     doc = frappe.get_doc(doctype, name)
     doc.delete()
     return {

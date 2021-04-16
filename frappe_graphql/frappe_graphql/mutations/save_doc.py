@@ -16,8 +16,8 @@ def bind(schema: GraphQLSchema):
 
 
 def save_doc_resolver(obj, info: GraphQLResolveInfo, **kwargs):
-    new_doc = frappe.parse_json(kwargs["doc"])
-    new_doc.doctype = kwargs["doctype"]
+    new_doc = frappe.parse_json(kwargs.get("doc"))
+    new_doc.doctype = kwargs.get("doctype")
 
     if new_doc.name and frappe.db.exists(new_doc.doctype, new_doc.name):
         doc = frappe.get_doc(new_doc.doctype, new_doc.name)
