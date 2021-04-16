@@ -1,4 +1,4 @@
-# Custom Cursor Pagination
+# Users with Docs they Own
 
 You can make use of `CursorPaginator` class to help you implement Cursor pagination.
 
@@ -262,7 +262,17 @@ type UserWithOwnership {
     doctype: String!
     name: String!
     first_name: String!
-    documents(first: Int, last: Int, after: String, before: String, filter: [DBFilterInput!]): DocumentConnection!
+    documents(first: Int, last: Int, after: String, before: String, filter: [DBFilterInput!], sortBy: UserWithOwnershipSortBy): DocumentConnection!
+}
+
+input UserWithOwnershipSortBy {
+    direction: SortDirection!
+    field: UserWithOwnershipSortByFields
+}
+
+enum UserWithOwnershipSortByFields {
+    DOCTYPE_AND_NAME 
+    DOCTYPE_AND_DOCSTATUS
 }
 
 type UserEdge {
@@ -285,7 +295,14 @@ type UserList {
 
 ```py
 # add this to graphql_schema_processors
-def get_user(schema: GraphQLSchema):
+from graphql import GraphQLSchema, GraphQLInt, GraphQLNonNull, GraphQLString, GraphQLField
+
+import frappe
+from frappe.model.db_query import DatabaseQuery
+from frappe_graphql import CursorPaginator
+
+
+def bind_user_with_ownership(schema: GraphQLSchema):
 
     def count_resolver(paginator: CursorPaginator, filters):
         role = paginator.resolve_kwargs.get("role")
@@ -298,20 +315,20 @@ def get_user(schema: GraphQLSchema):
             )
         )[0]._count
 
-    def node_resolver(paginator: CursorPaginator, filters, sort_key, sort_dir, limit):
+    def node_resolver(paginator: CursorPaginator, filters, sorting_fields, sort_dir, limit):
         role = paginator.resolve_kwargs.get("role")
         conditions = [DatabaseQuery("User").prepare_filter_condition(
             f).replace("`tabUser`", "user") for f in filters or []]
         conditions.append("role.role = %(role)s")
         return frappe.db.sql(
             f"""
-            SELECT user.name, "User" as doctype, user.{sort_key}
+            SELECT user.name, "User" as doctype, {', '.join(['user.' + x for x in sorting_fields])}
             FROM `tabUser` user
             JOIN `tabHas Role` role
                 ON role.parent = user.name
             WHERE
                 {' AND '.join(conditions)}
-            ORDER BY user.{sort_key} {sort_dir}
+            ORDER BY {', '.join(['user.' + x for x in sorting_fields])} {sort_dir}
             LIMIT {limit}
             """, {"role": role}, as_dict=1
         )
@@ -339,7 +356,8 @@ def get_user(schema: GraphQLSchema):
     def get_all_doctypes_union():
         doctypes = [x.name for x in frappe.get_all("DocType", {"issingle": 0, "istable": 0})]
         return " UNION ".join([
-            f"SELECT name, \"{d}\" as doctype, modified FROM `tab{d}` WHERE owner = %(owner)s"
+            f"SELECT name, \"{d}\" as doctype, docstatus, modified FROM `tab{d}` "
+            + "WHERE owner = %(owner)s"
             for d in doctypes
         ])
 
@@ -355,18 +373,28 @@ def get_user(schema: GraphQLSchema):
         {" WHERE {}".format(" AND ".join(conditions)) if len(conditions) else ""}
         """, {"owner": owner})[0][0]
 
-    def document_node_resolver(paginator: CursorPaginator, filters, sort_key, sort_dir, limit):
+    def document_node_resolver(
+            paginator: CursorPaginator,
+            filters,
+            sorting_fields,
+            sort_dir,
+            limit):
         owner = paginator.resolve_obj.name
-        conditions = [DatabaseQuery(paginator.doctype).prepare_filter_condition(
-            f).replace(F"`tab{paginator.doctype}`.", "") for f in filters or []]
+        conditions = [
+            DatabaseQuery(
+                paginator.doctype).prepare_filter_condition(f).replace(
+                F"`tab{paginator.doctype}`.",
+                "") if isinstance(
+                f,
+                list) else f for f in filters or []]
         return frappe.db.sql(f"""
         SELECT
-            name, doctype, modified
+            name, doctype, {', '.join(sorting_fields)}
         FROM (
             {get_all_doctypes_union()}
         ) dt_tables
         {" WHERE {}".format(" AND ".join(conditions)) if len(conditions) else ""}
-        ORDER BY {sort_key} {sort_dir}
+        ORDER BY {', '.join([f'{x} {sort_dir}' for x in sorting_fields])}
         LIMIT {limit}
         """, {"owner": owner}, as_dict=1)
 
@@ -378,6 +406,13 @@ def get_user(schema: GraphQLSchema):
         ).resolve(obj, info, **kwargs)
 
     schema.type_map["UserWithOwnership"].fields["documents"].resolve = documents_resolver
+
+    ownership_sortfield_enum = {
+        "DOCTYPE_AND_NAME": ["dt_tables.doctype", "dt_tables.name"],
+        "DOCTYPE_AND_DOCSTATUS": ["dt_tables.doctype", "dt_tables.docstatus", "dt_tables.modified"],
+    }
+    for sort_key, value in ownership_sortfield_enum.items():
+        schema.type_map["UserWithOwnershipSortByFields"].values[sort_key].value = value
 
 ```
 </p>

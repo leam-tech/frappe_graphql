@@ -26,70 +26,62 @@ class CursorPaginator(object):
         self.extra_args = extra_args
 
     def resolve(self, obj, info: GraphQLResolveInfo, **kwargs):
+
+        self.validate_connection_args(kwargs)
+
         self.resolve_obj = obj
         self.resolve_info = info
         self.resolve_kwargs = kwargs
 
-        has_next_page = False
-        has_previous_page = False
-        before = kwargs.get("before")
-        after = kwargs.get("after")
-        first = kwargs.get("first")
-        last = kwargs.get("last")
+        self.has_next_page = False
+        self.has_previous_page = False
+        self.before = kwargs.get("before")
+        self.after = kwargs.get("after")
+        self.first = kwargs.get("first")
+        self.last = kwargs.get("last")
 
-        filters = kwargs.get("filter") or []
-        filters.extend(self.predefined_filters or [])
+        self.filters = kwargs.get("filter") or []
+        self.filters.extend(self.predefined_filters or [])
 
-        sort_key, sort_dir = self.get_sort_args(kwargs.get("sortBy"))
-        self.validate_connection_args(kwargs)
+        self.sorting_fields, self.sort_dir = self.get_sort_args(kwargs.get("sortBy"))
 
-        original_sort_dir = sort_dir
-        if last:
+        self.original_sort_dir = self.sort_dir
+        if self.last:
             # to get LAST, we swap the sort order
             # data will be reversed after fetch
-            sort_dir = "desc" if sort_dir == "asc" else "asc"
+            self.sort_dir = "desc" if self.sort_dir == "asc" else "asc"
 
-        cursor = after or before
-        limit = (first or last) + 1
-        requested_count = first or last
+        self.cursor = self.after or self.before
+        limit = (self.first or self.last) + 1
+        requested_count = self.first or self.last
 
         if not self.skip_process_filters:
-            filters = self.process_filters(filters)
+            self.filters = self.process_filters(self.filters)
 
-        count = self.get_count(self.doctype, filters)
+        count = self.get_count(self.doctype, self.filters)
 
-        if cursor:
+        if self.cursor:
             # Cursor filter should be applied after taking count
-            has_previous_page = True
-            cursor = self.from_cursor(cursor)
-            operator_map = {
-                "after": {"asc": ">", "desc": "<"},
-                "before": {"asc": "<", "desc": ">"},
-            }
-            filters.append([
-                sort_key,
-                operator_map["after"][original_sort_dir]
-                if after else operator_map["before"][original_sort_dir],
-                cursor[0]
-            ])
+            self.has_previous_page = True
+            self.filters.append(self.get_cursor_filter())
 
-        data = self.get_data(self.doctype, filters, sort_key, sort_dir, limit)
+        data = self.get_data(self.doctype, self.filters, self.sorting_fields, self.sort_dir, limit)
         matched_count = len(data)
         if matched_count > requested_count:
-            has_next_page = True
+            self.has_next_page = True
             data.pop()
-        if sort_dir != original_sort_dir:
+        if self.sort_dir != self.original_sort_dir:
             data = reversed(data)
 
         edges = [frappe._dict(
-            cursor=self.to_cursor(x, sort_key=sort_key), node=x
+            cursor=self.to_cursor(x, sorting_fields=self.sorting_fields), node=x
         ) for x in data]
 
         return frappe._dict(
             totalCount=count,
             pageInfo=frappe._dict(
-                hasNextPage=has_next_page,
-                hasPreviousPage=has_previous_page,
+                hasNextPage=self.has_next_page,
+                hasPreviousPage=self.has_previous_page,
                 startCursor=edges[0].cursor if len(edges) else None,
                 endCursor=edges[-1].cursor if len(edges) else None
             ),
@@ -126,33 +118,38 @@ class CursorPaginator(object):
             filters=filters
         )[0].total_count
 
-    def get_data(self, doctype, filters, sort_key, sort_dir, limit):
+    def get_data(self, doctype, filters, sorting_fields, sort_dir, limit):
         if self.custom_node_resolver:
             return self.custom_node_resolver(
                 paginator=self,
                 filters=filters,
-                sort_key=sort_key,
+                sorting_fields=sorting_fields,
                 sort_dir=sort_dir,
                 limit=limit
             )
 
         return frappe.get_list(
             doctype,
-            fields=["name", f"SUBSTR(\".{doctype}\", 2) as doctype", sort_key],
+            fields=["name", f"SUBSTR(\".{doctype}\", 2) as doctype"] + sorting_fields,
             filters=filters,
-            order_by=f"{sort_key} {sort_dir}",
+            order_by=f"{', '.join([f'{x} {sort_dir}' for x in sorting_fields])}",
             limit_page_length=limit
         )
 
     def get_sort_args(self, sorting_input=None):
-        sort_key = "modified"
+        sorting_fields = ["modified"]
         sort_dir = "desc"
         if sorting_input and sorting_input.get("field"):
-            sort_key = sorting_input.get("field").lower()
             sort_dir = sorting_input.get("direction").lower() \
-                if sorting_input.get("direction") else "desc"
+                if sorting_input.get("direction") else "asc"
 
-        return sort_key, sort_dir
+            sorting_input_field = sorting_input.get("field")
+            if isinstance(sorting_input_field, str):
+                sorting_fields = [sorting_input_field.lower()]
+            elif isinstance(sorting_input_field, (list, tuple)):
+                sorting_fields = sorting_input_field
+
+        return sorting_fields, sort_dir
 
     def process_filters(self, input_filters):
         filters = []
@@ -172,8 +169,59 @@ class CursorPaginator(object):
 
         return filters
 
-    def to_cursor(self, row, sort_key):
-        _json = frappe.as_json([row.get(sort_key)])
+    def get_cursor_filter(self):
+        cursor_values = self.from_cursor(self.cursor)
+        operator_map = {
+            "after": {"asc": ">", "desc": "<"},
+            "before": {"asc": "<", "desc": ">"},
+        }
+        operator = operator_map["after"][self.original_sort_dir] \
+            if self.after else operator_map["before"][self.original_sort_dir]
+
+        def format_column_name(column):
+            if "." in column:
+                return column
+
+            return f"`tab{self.doctype}`.{column}"
+
+        def db_escape(v):
+            return frappe.db.escape(v)
+
+        or_conditions = []
+        for index, field_name in enumerate(self.sorting_fields):
+            if cursor_values[index] is None and operator == ">":
+                continue
+
+            and_conditions = []
+            for cursor_id, cursor_value in enumerate(cursor_values[:index]):
+                and_conditions.append(
+                    f"{format_column_name(self.sorting_fields[cursor_id])} = "
+                    + f"{db_escape(cursor_value)}")
+
+            if operator == ">":
+                and_conditions.append(
+                    f"({format_column_name(field_name)} "
+                    + f"{operator} {db_escape(cursor_values[index])} OR "
+                    + f"{format_column_name(field_name)} IS NULL)")
+            elif cursor_values[index] is not None:
+                and_conditions.append(
+                    f"{format_column_name(field_name)} "
+                    + f"{operator} {db_escape(cursor_values[index])}"
+                )
+            else:
+                and_conditions.append(
+                    f"{format_column_name(field_name)} IS NOT NULL"
+                )
+
+            or_conditions.append("({})".format(" AND ".join(and_conditions)))
+
+        return " OR ".join(or_conditions)
+
+    def to_cursor(self, row, sorting_fields):
+        # sorting_fields could be [custom_table.field_1],
+        # where only field_1 will be available on row
+        _json = frappe.as_json([row.get(x.split('.')[1] if '.' in x else x)
+                                for x in sorting_fields])
         return frappe.safe_decode(base64.b64encode(_json.encode("utf-8")))
 
     def from_cursor(self, cursor):
