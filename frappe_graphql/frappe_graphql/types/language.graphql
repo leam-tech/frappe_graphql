@@ -1,0 +1,48 @@
+type Language implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  language_code: String!
+  language_name: String!
+  flag: String
+  based_on: Language
+  based_on__name: String
+}
+
+enum LanguageSortField {
+  NAME
+  CREATION
+  MODIFIED
+  LANGUAGE_CODE
+}
+
+input LanguageSortingInput {
+  direction: SortDirection!
+  field: LanguageSortField!
+}
+
+type LanguageCountableEdge {
+  cursor: String!
+  node: Language!
+}
+
+type LanguageCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [LanguageCountableEdge!]!
+}
+
+extend type Query {
+  Language(name: String!): Language!
+  Languages(filter: [DBFilterInput], sortBy: LanguageSortingInput, before: String, after: String, first: Int, last: Int): LanguageCountableConnection!
+}

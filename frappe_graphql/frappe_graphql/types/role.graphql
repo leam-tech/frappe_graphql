@@ -1,0 +1,59 @@
+type Role implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  role_name: String!
+  home_page: String
+  # restrict_to_domain: Domain
+  # restrict_to_domain__name: String
+  disabled: Int
+  desk_access: Int
+  two_factor_auth: Int
+  search_bar: Int
+  notifications: Int
+  chat: Int
+  list_sidebar: Int
+  bulk_actions: Int
+  view_switcher: Int
+  form_sidebar: Int
+  timeline: Int
+  dashboard: Int
+}
+
+enum RoleSortField {
+  NAME
+  CREATION
+  MODIFIED
+  ROLE_NAME
+}
+
+input RoleSortingInput {
+  direction: SortDirection!
+  field: RoleSortField!
+}
+
+type RoleCountableEdge {
+  cursor: String!
+  node: Role!
+}
+
+type RoleCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [RoleCountableEdge!]!
+}
+
+extend type Query {
+  Role(name: String!): Role!
+  Roles(filter: [DBFilterInput], sortBy: RoleSortingInput, before: String, after: String, first: Int, last: Int): RoleCountableConnection!
+}

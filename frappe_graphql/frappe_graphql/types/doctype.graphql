@@ -1,0 +1,97 @@
+type DocType implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  module: ModuleDef!
+  module__name: String
+  is_submittable: Int
+  istable: Int
+  issingle: Int
+  is_tree: Int
+  editable_grid: Int
+  quick_entry: Int
+  track_changes: Int
+  track_seen: Int
+  track_views: Int
+  custom: Int
+  beta: Int
+  fields: [DocField!]!
+  autoname: String
+  name_case: String
+  description: String
+  documentation: String
+  image_field: String
+  timeline_field: String
+  nsm_parent_field: String
+  max_attachments: Int
+  hide_toolbar: Int
+  allow_copy: Int
+  allow_rename: Int
+  allow_import: Int
+  allow_events_in_timeline: Int
+  allow_auto_repeat: Int
+  title_field: String
+  search_fields: String
+  default_print_format: String
+  sort_field: String
+  sort_order: String
+  document_type: String
+  icon: String
+  color: String
+  show_preview_popup: Int
+  show_name_in_global_search: Int
+  email_append_to: Int
+  sender_field: String
+  subject_field: String
+  permissions: [DocPerm!]!
+  # restrict_to_domain: Domain
+  restrict_to_domain__name: String
+  read_only: Int
+  in_create: Int
+  # actions: [DocTypeAction!]!
+  # links: [DocTypeLink!]!
+  has_web_view: Int
+  allow_guest_to_view: Int
+  index_web_pages_for_search: Int
+  route: String
+  is_published_field: String
+  engine: String
+}
+
+enum DocTypeSortField {
+  NAME
+  CREATION
+  MODIFIED
+  MODULE
+}
+
+input DocTypeSortingInput {
+  direction: SortDirection!
+  field: DocTypeSortField!
+}
+
+type DocTypeCountableEdge {
+  cursor: String!
+  node: DocType!
+}
+
+type DocTypeCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [DocTypeCountableEdge!]!
+}
+
+extend type Query {
+  DocType(name: String!): DocType!
+  DocTypes(filter: [DBFilterInput], sortBy: DocTypeSortingInput, before: String, after: String, first: Int, last: Int): DocTypeCountableConnection!
+}

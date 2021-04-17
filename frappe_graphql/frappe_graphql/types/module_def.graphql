@@ -1,0 +1,48 @@
+type ModuleDef implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  module_name: String!
+  custom: Int
+  app_name: String!
+  # restrict_to_domain: Domain
+  # restrict_to_domain__name: String
+}
+
+enum ModuleDefSortField {
+  NAME
+  CREATION
+  MODIFIED
+  MODULE_NAME
+}
+
+input ModuleDefSortingInput {
+  direction: SortDirection!
+  field: ModuleDefSortField!
+}
+
+type ModuleDefCountableEdge {
+  cursor: String!
+  node: ModuleDef!
+}
+
+type ModuleDefCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [ModuleDefCountableEdge!]!
+}
+
+extend type Query {
+  ModuleDef(name: String!): ModuleDef!
+  ModuleDefs(filter: [DBFilterInput], sortBy: ModuleDefSortingInput, before: String, after: String, first: Int, last: Int): ModuleDefCountableConnection!
+}

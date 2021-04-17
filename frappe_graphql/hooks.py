@@ -11,6 +11,10 @@ app_color = "grey"
 app_email = "info@leam.ae"
 app_license = "MIT"
 
+graphql_sdl_dir = [
+    "./frappe_graphql/frappe_graphql/frappe_graphql/types"
+]
+
 graphql_schema_processors = [
     # Queries
     "frappe_graphql.frappe_graphql.queries.ping.bind",

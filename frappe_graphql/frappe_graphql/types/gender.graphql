@@ -1,0 +1,43 @@
+type Gender implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  gender: String
+}
+
+enum GenderSortField {
+  NAME
+  CREATION
+  MODIFIED
+}
+
+input GenderSortingInput {
+  direction: SortDirection!
+  field: GenderSortField!
+}
+
+type GenderCountableEdge {
+  cursor: String!
+  node: Gender!
+}
+
+type GenderCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [GenderCountableEdge!]!
+}
+
+extend type Query {
+  Gender(name: String!): Gender!
+  Genders(filter: [DBFilterInput], sortBy: GenderSortingInput, before: String, after: String, first: Int, last: Int): GenderCountableConnection!
+}

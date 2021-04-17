@@ -1,0 +1,45 @@
+type RoleProfile implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  role_profile: String!
+  roles: [HasRole!]!
+}
+
+enum RoleProfileSortField {
+  NAME
+  CREATION
+  MODIFIED
+  ROLE_PROFILE
+}
+
+input RoleProfileSortingInput {
+  direction: SortDirection!
+  field: RoleProfileSortField!
+}
+
+type RoleProfileCountableEdge {
+  cursor: String!
+  node: RoleProfile!
+}
+
+type RoleProfileCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [RoleProfileCountableEdge!]!
+}
+
+extend type Query {
+  RoleProfile(name: String!): RoleProfile!
+  RoleProfiles(filter: [DBFilterInput], sortBy: RoleProfileSortingInput, before: String, after: String, first: Int, last: Int): RoleProfileCountableConnection!
+}
