@@ -1,0 +1,44 @@
+type Domain implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  domain: String!
+}
+
+enum DomainSortField {
+  NAME
+  CREATION
+  MODIFIED
+  DOMAIN
+}
+
+input DomainSortingInput {
+  direction: SortDirection!
+  field: DomainSortField!
+}
+
+type DomainCountableEdge {
+  cursor: String!
+  node: Domain!
+}
+
+type DomainCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [DomainCountableEdge!]!
+}
+
+extend type Query {
+  Domain(name: String!): Domain!
+  Domains(filter: [DBFilterInput], sortBy: DomainSortingInput, before: String, after: String, first: Int, last: Int): DomainCountableConnection!
+}

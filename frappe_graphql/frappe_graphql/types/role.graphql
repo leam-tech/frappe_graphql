@@ -14,8 +14,8 @@ type Role implements BaseDocType {
   modified_by__name: String!
   role_name: String!
   home_page: String
-  # restrict_to_domain: Domain
-  # restrict_to_domain__name: String
+  restrict_to_domain: Domain
+  restrict_to_domain__name: String
   disabled: Int
   desk_access: Int
   two_factor_auth: Int

@@ -15,8 +15,8 @@ type ModuleDef implements BaseDocType {
   module_name: String!
   custom: Int
   app_name: String!
-  # restrict_to_domain: Domain
-  # restrict_to_domain__name: String
+  restrict_to_domain: Domain
+  restrict_to_domain__name: String
 }
 
 enum ModuleDefSortField {

@@ -54,12 +54,12 @@ type DocType implements BaseDocType {
   sender_field: String
   subject_field: String
   permissions: [DocPerm!]!
-  # restrict_to_domain: Domain
+  restrict_to_domain: Domain
   restrict_to_domain__name: String
   read_only: Int
   in_create: Int
-  # actions: [DocTypeAction!]!
-  # links: [DocTypeLink!]!
+  actions: [DocTypeAction!]!
+  links: [DocTypeLink!]!
   has_web_view: Int
   allow_guest_to_view: Int
   index_web_pages_for_search: Int

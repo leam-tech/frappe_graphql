@@ -1,0 +1,48 @@
+type DocTypeLink implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  link_doctype: DocType!
+  link_doctype__name: String
+  link_fieldname: String!
+  group: String
+  hidden: Int
+  custom: Int
+}
+
+enum DocTypeLinkSortField {
+  NAME
+  CREATION
+  MODIFIED
+}
+
+input DocTypeLinkSortingInput {
+  direction: SortDirection!
+  field: DocTypeLinkSortField!
+}
+
+type DocTypeLinkCountableEdge {
+  cursor: String!
+  node: DocTypeLink!
+}
+
+type DocTypeLinkCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [DocTypeLinkCountableEdge!]!
+}
+
+extend type Query {
+  DocTypeLink(name: String!): DocTypeLink!
+  DocTypeLinks(filter: [DBFilterInput], sortBy: DocTypeLinkSortingInput, before: String, after: String, first: Int, last: Int): DocTypeLinkCountableConnection!
+}
