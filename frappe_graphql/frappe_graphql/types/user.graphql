@@ -1,0 +1,101 @@
+type User implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  enabled: Int
+  email: String!
+  last_name: String
+  language: Language
+  language__name: String
+  first_name: String!
+  full_name: String
+  time_zone: String
+  middle_name: String
+  username: String
+  send_welcome_email: Int
+  unsubscribed: Int
+  user_image: String
+  role_profile_name: RoleProfile
+  role_profile_name__name: String
+  roles: [HasRole!]!
+  gender: Gender
+  gender__name: String
+  birth_date: String
+  interest: String
+  banner_image: String
+  desk_theme: String
+  phone: String
+  location: String
+  bio: String
+  mute_sounds: Int
+  mobile_no: String
+  new_password: String
+  logout_all_sessions: Int
+  reset_password_key: String
+  last_password_reset_date: String
+  redirect_url: String
+  document_follow_notify: Int
+  document_follow_frequency: String
+  email_signature: String
+  thread_notify: Int
+  send_me_a_copy: Int
+  allowed_in_mentions: Int
+  home_settings: String
+  simultaneous_sessions: Int
+  restrict_ip: String
+  last_ip: String
+  login_after: Int
+  user_type: String
+  last_active: String
+  login_before: Int
+  bypass_restrict_ip_check_if_2fa_enabled: Int
+  last_login: String
+  last_known_versions: String
+  api_key: String
+  api_secret: String
+}
+
+extend type User {
+  override_as_global: Int
+  quick_login_pin: String
+}
+
+enum UserSortField {
+  NAME
+  CREATION
+  MODIFIED
+  USERNAME
+  MOBILE_NO
+  API_KEY
+}
+
+input UserSortingInput {
+  direction: SortDirection!
+  field: UserSortField!
+}
+
+type UserCountableEdge {
+  cursor: String!
+  node: User!
+}
+
+type UserCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [UserCountableEdge!]!
+}
+
+extend type Query {
+  User(name: String!): User!
+  Users(filter: [DBFilterInput], sortBy: UserSortingInput, before: String, after: String, first: Int, last: Int): UserCountableConnection!
+}

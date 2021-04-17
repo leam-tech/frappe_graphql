@@ -17,13 +17,12 @@ def graphql():
               help="Name of the module whose doctype sdls need to be generated")
 @click.option("--doctype", "-dt", multiple=True,
               help="Doctype to generate sdls for. You can specify multiple")
-@click.option("--ignore-root-file", is_flag=True, default=False, help="Ignore root.graphql")
 @click.option("--ignore-custom-fields", is_flag=True, default=False,
               help="Ignore custom fields generation")
 @pass_context
 def generate_sdl(
     context, output_dir=None, app=None, module=None, doctype=None,
-    ignore_root_file=False, ignore_custom_fields=False
+    ignore_custom_fields=False
 ):
     site = get_site(context=context)
     try:
@@ -42,7 +41,6 @@ def generate_sdl(
             app=app,
             modules=list(module),
             doctypes=list(doctype),
-            ignore_root_file=ignore_root_file,
             ignore_custom_fields=ignore_custom_fields
         )
     finally:

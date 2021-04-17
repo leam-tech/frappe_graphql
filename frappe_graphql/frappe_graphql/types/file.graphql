@@ -1,0 +1,63 @@
+type File implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  file_name: String
+  is_private: Int
+  is_home_folder: Int
+  is_attachments_folder: Int
+  file_size: Int
+  file_url: String
+  thumbnail_url: String
+  folder: File
+  folder__name: String
+  is_folder: Int
+  attached_to_doctype: DocType
+  attached_to_doctype__name: String
+  attached_to_name: String
+  attached_to_field: String
+  old_parent: String
+  content_hash: String
+  uploaded_to_dropbox: Int
+  uploaded_to_google_drive: Int
+}
+
+enum FileSortField {
+  NAME
+  CREATION
+  MODIFIED
+  IS_HOME_FOLDER
+  ATTACHED_TO_DOCTYPE
+  ATTACHED_TO_NAME
+}
+
+input FileSortingInput {
+  direction: SortDirection!
+  field: FileSortField!
+}
+
+type FileCountableEdge {
+  cursor: String!
+  node: File!
+}
+
+type FileCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [FileCountableEdge!]!
+}
+
+extend type Query {
+  File(name: String!): File!
+  Files(filter: [DBFilterInput], sortBy: FileSortingInput, before: String, after: String, first: Int, last: Int): FileCountableConnection!
+}

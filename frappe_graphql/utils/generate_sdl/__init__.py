@@ -1,7 +1,6 @@
 import os
 import frappe
 
-from .root import get_root_sdl
 from .doctype import get_doctype_sdl
 
 IGNORED_DOCTYPES = [
@@ -9,9 +8,24 @@ IGNORED_DOCTYPES = [
     "Installed Applications",
 ]
 
+SDL_PREDEFINED_DOCTYPES = [
+    # uploadFile
+    "File",
+
+    # Owner, Modified By
+    "User",
+
+    # User
+    "Gender", "Has Role", "Role Profile", "Role", "Language",
+
+    # File.attached_to_doctype
+    "DocType", "Module Def", "DocField", "DocPerm"
+]
+
 
 def make_doctype_sdl_files(target_dir, app=None, modules=[], doctypes=[],
-                           ignore_root_file=False, ignore_custom_fields=False):
+                           ignore_custom_fields=False):
+    specific_doctypes = doctypes or []
     doctypes = get_doctypes(
         app=app,
         modules=modules,
@@ -26,11 +40,9 @@ def make_doctype_sdl_files(target_dir, app=None, modules=[], doctypes=[],
         with open(target_file, "w") as f:
             f.write(contents)
 
-    if not ignore_root_file:
-        write_file("root", get_root_sdl())
-
     for doctype in doctypes:
-        if doctype in IGNORED_DOCTYPES:
+        if doctype not in specific_doctypes and \
+                (doctype in IGNORED_DOCTYPES or doctype in SDL_PREDEFINED_DOCTYPES):
             continue
         sdl = get_doctype_sdl(doctype, ignore_custom_fields)
         write_file(doctype, sdl)

@@ -1,0 +1,93 @@
+type DocField implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  label: String
+  fieldtype: String!
+  fieldname: String
+  precision: String
+  length: Int
+  non_negative: Int
+  hide_days: Int
+  hide_seconds: Int
+  reqd: Int
+  search_index: Int
+  in_list_view: Int
+  in_standard_filter: Int
+  in_global_search: Int
+  in_preview: Int
+  allow_in_quick_entry: Int
+  bold: Int
+  translatable: Int
+  collapsible: Int
+  collapsible_depends_on: String
+  options: String
+  default: String
+  fetch_from: String
+  fetch_if_empty: Int
+  depends_on: String
+  hidden: Int
+  read_only: Int
+  unique: Int
+  set_only_once: Int
+  allow_bulk_edit: Int
+  permlevel: Int
+  ignore_user_permissions: Int
+  allow_on_submit: Int
+  report_hide: Int
+  remember_last_selected_value: Int
+  ignore_xss_filter: Int
+  hide_border: Int
+  mandatory_depends_on: String
+  read_only_depends_on: String
+  in_filter: Int
+  no_copy: Int
+  print_hide: Int
+  print_hide_if_no_value: Int
+  print_width: String
+  width: String
+  columns: Int
+  description: String
+  oldfieldname: String
+  oldfieldtype: String
+}
+
+enum DocFieldSortField {
+  NAME
+  CREATION
+  MODIFIED
+  LABEL
+  FIELDTYPE
+  FIELDNAME
+}
+
+input DocFieldSortingInput {
+  direction: SortDirection!
+  field: DocFieldSortField!
+}
+
+type DocFieldCountableEdge {
+  cursor: String!
+  node: DocField!
+}
+
+type DocFieldCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [DocFieldCountableEdge!]!
+}
+
+extend type Query {
+  DocField(name: String!): DocField!
+  DocFields(filter: [DBFilterInput], sortBy: DocFieldSortingInput, before: String, after: String, first: Int, last: Int): DocFieldCountableConnection!
+}

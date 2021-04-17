@@ -11,6 +11,22 @@ app_color = "grey"
 app_email = "info@leam.ae"
 app_license = "MIT"
 
+graphql_sdl_dir = [
+    "./frappe_graphql/frappe_graphql/frappe_graphql/types"
+]
+
+graphql_schema_processors = [
+    # Queries
+    "frappe_graphql.frappe_graphql.queries.ping.bind",
+
+    # Mutations
+    "frappe_graphql.frappe_graphql.mutations.set_value.bind",
+    "frappe_graphql.frappe_graphql.mutations.save_doc.bind",
+    "frappe_graphql.frappe_graphql.mutations.delete_doc.bind",
+
+    "frappe_graphql.frappe_graphql.mutations.upload_file.bind",
+]
+
 # Includes in <head>
 # ------------------
 

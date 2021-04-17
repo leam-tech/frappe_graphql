@@ -1,0 +1,44 @@
+type HasRole implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  role: Role
+  role__name: String
+}
+
+enum HasRoleSortField {
+  NAME
+  CREATION
+  MODIFIED
+}
+
+input HasRoleSortingInput {
+  direction: SortDirection!
+  field: HasRoleSortField!
+}
+
+type HasRoleCountableEdge {
+  cursor: String!
+  node: HasRole!
+}
+
+type HasRoleCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [HasRoleCountableEdge!]!
+}
+
+extend type Query {
+  HasRole(name: String!): HasRole!
+  HasRoles(filter: [DBFilterInput], sortBy: HasRoleSortingInput, before: String, after: String, first: Int, last: Int): HasRoleCountableConnection!
+}
