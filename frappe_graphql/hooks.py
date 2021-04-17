@@ -145,7 +145,7 @@ graphql_schema_processors = [
 # ------------------------------
 #
 override_whitelisted_methods = {
-    "graphql": "frappe_graphql.graphql.execute"
+    "graphql": "frappe_graphql.api.execute_gql_query"
 }
 #
 # each overriding function accepts a `data` argument;
