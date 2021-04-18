@@ -1,0 +1,51 @@
+type Translation implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  contributed: Int
+  language: Language
+  language__name: String
+  source_text: String
+  context: String
+  translated_text: String
+  contribution_status: String
+  contribution_docname: String
+}
+
+enum TranslationSortField {
+  NAME
+  CREATION
+  MODIFIED
+  LANGUAGE
+}
+
+input TranslationSortingInput {
+  direction: SortDirection!
+  field: TranslationSortField!
+}
+
+type TranslationCountableEdge {
+  cursor: String!
+  node: Translation!
+}
+
+type TranslationCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [TranslationCountableEdge!]!
+}
+
+extend type Query {
+  Translation(name: String!): Translation!
+  Translations(filter: [DBFilterInput], sortBy: TranslationSortingInput, before: String, after: String, first: Int, last: Int): TranslationCountableConnection!
+}

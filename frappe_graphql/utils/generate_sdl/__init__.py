@@ -19,7 +19,11 @@ SDL_PREDEFINED_DOCTYPES = [
     "Gender", "Has Role", "Role Profile", "Role", "Language",
 
     # File.attached_to_doctype
-    "DocType", "Module Def", "DocField", "DocPerm"
+    "DocType", "Module Def", "DocField", "DocPerm", "Domain",
+    "DocType Action", "DocType Link",
+
+    # MakeTranslation
+    "Translation"
 ]
 
 
