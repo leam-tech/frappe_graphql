@@ -17,7 +17,8 @@ def execute(query=None, variables=None, operation_name=None):
         source=query,
         variable_values=variables,
         operation_name=operation_name,
-        field_resolver=default_field_resolver
+        field_resolver=default_field_resolver,
+        context_value=frappe._dict()
     )
     output = frappe._dict()
     for k in ("data", "errors"):
