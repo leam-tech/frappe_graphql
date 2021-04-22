@@ -181,8 +181,9 @@ class CursorPaginator(object):
         def format_column_name(column):
             if "." in column:
                 return column
-
-            return f"`tab{self.doctype}`.{column}"
+            meta = frappe.get_meta(self.doctype)
+            return f"`tab{self.doctype}`.{column}" if column in \
+                meta.get_valid_columns() else column
 
         def db_escape(v):
             return frappe.db.escape(v)
