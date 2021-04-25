@@ -52,7 +52,7 @@ type Mutation {
         attached_to_name: String, fieldname: String): File
 
     addTranslation(language: String!, source_text: String!, translated_text: String!,
-      context: String, doctype: String, docname: String): Translation!
+      context: String, doctype: String, docname: String, docfield: String): Translation!
 }
 
 type Query {

@@ -44,7 +44,7 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     else:
         value = _get_value(info.field_name)
         if df.translatable:
-            return get_translated(value, cached_doc)
+            return get_translated(cached_doc, info.field_name, value)
 
         return value
 
@@ -61,11 +61,13 @@ def get_default_field_df(fieldname):
     return df
 
 
-def get_translated(value, doc):
+def get_translated(doc, fieldname, value):
     """
     Precedence Order:
+        key:doctype:name:fieldname
         key:doctype:name
         key:parenttype:parent
+        key:doctype:fieldname
         key:doctype
         key:parenttype
         key
@@ -74,6 +76,11 @@ def get_translated(value, doc):
         return value
 
     plain_translation = frappe._(value)
+
+    # key:doctype:name:fieldname
+    field_translation = frappe._(value, context=f"{doc.doctype}:{doc.name}:{fieldname}")
+    if field_translation != plain_translation:
+        return field_translation
 
     # key:doctype:name
     doc_translation = frappe._(value, context=f"{doc.doctype}:{doc.name}")
@@ -85,6 +92,11 @@ def get_translated(value, doc):
         parent_translation = frappe._(value, context=f"{doc.parenttype}:{doc.parent}")
         if parent_translation != plain_translation:
             return parent_translation
+
+    # key:doctype:fieldname
+    doctype_field_translation = frappe._(value, context=f"{doc.doctype}:{fieldname}")
+    if doctype_field_translation != plain_translation:
+        return doctype_field_translation
 
     # key:doctype
     doctype_translation = frappe._(value, context=f"{doc.doctype}")

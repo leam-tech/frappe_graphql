@@ -14,11 +14,17 @@ def add_translation_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     context = kwargs.get("context")
     doctype = kwargs.get("doctype")
     docname = kwargs.get("docname")
+    docfield = kwargs.get("docfield")
+
+    context = None
+    if doctype:
+        context = doctype
 
     if doctype and docname:
-        context = f"{doctype}:{docname}"
-    elif doctype:
-        context = doctype
+        context += f":{docname}"
+
+    if doctype and docfield:
+        context += f":{docfield}"
 
     tr_doc = frappe.get_doc(frappe._dict(
         doctype="Translation",
