@@ -16,7 +16,6 @@ def add_translation_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     docname = kwargs.get("docname")
     docfield = kwargs.get("docfield")
 
-    context = None
     if doctype:
         context = doctype
 
