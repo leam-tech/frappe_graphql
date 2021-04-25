@@ -2,8 +2,6 @@
 You can pass in `first`, `last`, `after` and `before`  
 [GraphQL Documentation on Pagination](https://graphql.org/learn/pagination/)
 
-If you want to implement the same in one of your Custom queries, please check out the example here: [Custom & Nested Pagination](./nested_pagination.md)
-
 Example:
 <details>
 <summary>Query</summary>
@@ -76,3 +74,10 @@ Example:
 ```
 </p>
 </details>
+
+If you want to implement the same in one of your Custom queries, please check out the following examples here: [Custom & Nested Pagination](./nested_pagination.md)
+
+More Examples:
+- [Get Users with all the documents they `own`](./pagination_examples/users_with_ownership.md)
+- [Get Todo list sorted by assigned_user (owner) & status](./pagination_examples/todo_with_user_status_sorting.md)
+- Sort Users by number of Roles they got have assigned
