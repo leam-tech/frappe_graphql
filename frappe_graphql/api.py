@@ -1,4 +1,5 @@
 from graphql import GraphQLError
+from typing import List
 
 import frappe
 from .graphql import execute
@@ -17,7 +18,7 @@ def execute_gql_query():
     if len(output.get("errors", [])):
         frappe.db.rollback()
         log_error(query, variables, operation_name, output)
-        frappe.local.response["http_status_code"] = 400
+        frappe.local.response["http_status_code"] = get_max_http_status_code(output.get("errors"))
 
 
 def get_query():
@@ -67,6 +68,21 @@ def get_query():
                     obj[path.pop(0)] = file_key
 
     return query, variables, operation_name
+
+
+def get_max_http_status_code(errors: List[GraphQLError]):
+    http_status_code = 400
+    for error in errors:
+        exc = error.original_error
+
+        if not exc:
+            continue
+
+        exc_status = getattr(exc, "http_status_code", 400)
+        if exc_status > http_status_code:
+            http_status_code = exc_status
+
+    return http_status_code
 
 
 def log_error(query, variables, operation_name, output):
