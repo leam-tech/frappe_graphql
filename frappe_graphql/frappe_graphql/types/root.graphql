@@ -1,3 +1,6 @@
+scalar Upload
+scalar Password
+
 schema {
 	query: Query
 	mutation: Mutation
@@ -19,7 +22,6 @@ interface BaseDocType {
   modified_by__name: String!
 }
 
-scalar Upload
 
 type SET_VALUE_TYPE {
     doctype: String!
