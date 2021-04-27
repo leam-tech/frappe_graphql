@@ -14,6 +14,7 @@ def execute_gql_query():
         operation_name=operation_name
     )
 
+    frappe.clear_messages()
     frappe.local.response = output
     if len(output.get("errors", [])):
         frappe.db.rollback()
@@ -99,31 +100,20 @@ def log_error(query, variables, operation_name, output):
             f"GQLError #{idx}\n"
             + f"{str(err)}\n\n"
             + f"{''.join(tb.format_exception(exc, exc, exc.__traceback__))}"
-            + "==========================================\n\n"
         )
 
+    tracebacks.append(f"Frappe Traceback: \n{frappe.get_traceback()}")
     if frappe.conf.get("developer_mode"):
-        frappe.errprint(f"frappe.get_traceback: {frappe.get_traceback()}")
         frappe.errprint(tracebacks)
 
-    tracebacks = "\n\n".join(tracebacks)
-    frappe.log_error(
+    tracebacks = "\n==========================================\n".join(tracebacks)
+    error_log = frappe.new_doc("GraphQL Error Log")
+    error_log.update(frappe._dict(
         title="GraphQL API Error",
-        message=f"""
-Query: {query}
-Variables: {variables}
-Operation Name: {operation_name}
-
-Output:
-{output}
-
-Tracebacks:
-
-frappe.get_traceback():
-{frappe.get_traceback()}
-==========================================
-
-GraphQLError tracebacks:
-{tracebacks}
-"""
-    )
+        operation_name=operation_name,
+        query=query,
+        variables=frappe.as_json(variables) if variables else None,
+        output=frappe.as_json(output),
+        traceback=tracebacks
+    ))
+    error_log.insert(ignore_permissions=True)

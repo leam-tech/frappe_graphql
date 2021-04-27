@@ -1,0 +1,27 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2021, Leam Technology Systems and contributors
+# For license information, please see license.txt
+
+from __future__ import unicode_literals
+import frappe
+from frappe.model.document import Document
+
+
+class GraphQLErrorLog(Document):
+    def onload(self):
+        if not self.seen:
+            self.db_set('seen', 1, update_modified=0)
+            frappe.db.commit()
+
+
+def set_old_logs_as_seen():
+    # set logs as seen
+    frappe.db.sql("""UPDATE `tabGraphQL Error Log` SET `seen`=1
+        WHERE `seen`=0 AND `creation` < (NOW() - INTERVAL '7' DAY)""")
+
+
+@frappe.whitelist()
+def clear_error_logs():
+    '''Flush all Error Logs'''
+    frappe.only_for('System Manager')
+    frappe.db.sql('''DELETE FROM `tabGraphQL Error Log`''')
