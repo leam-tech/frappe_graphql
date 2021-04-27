@@ -11,16 +11,26 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     if not doctype:
         return None
 
-    frappe.has_permission(doctype=doctype, doc=obj.get("name"), throw=True)
+    try:
+        # In the case when object signature lead into document resolver
+        # But the document no longer exists in database
+        cached_doc = frappe.get_cached_doc(doctype, obj.get("name"))
 
-    cached_doc = frappe.get_cached_doc(doctype, obj.get("name"))
-    # verbose check of is_owner of doc
-    role_permissions = frappe.permissions.get_role_permissions(doctype)
-    if role_permissions.get("if_owner", {}).get("read"):
-        if cached_doc.get("owner") != frappe.session.user:
-            frappe.throw(frappe._("No permission for {0}").format(doctype + " " + obj.get("name")))
-    # apply field level read perms
-    cached_doc.apply_fieldlevel_read_permissions()
+        # Permission check after the document is confirmed to exist
+        # verbose check of is_owner of doc
+        frappe.has_permission(doctype=doctype, doc=obj.get("name"), throw=True)
+        role_permissions = frappe.permissions.get_role_permissions(doctype)
+        if role_permissions.get("if_owner", {}).get("read"):
+            if cached_doc.get("owner") != frappe.session.user:
+                frappe.throw(
+                    frappe._("No permission for {0}").format(
+                        doctype + " " + obj.get("name")))
+        # apply field level read perms
+        cached_doc.apply_fieldlevel_read_permissions()
+
+    except frappe.DoesNotExistError:
+        cached_doc = obj
+
     meta = frappe.get_meta(doctype)
 
     df = meta.get_field(info.field_name)
