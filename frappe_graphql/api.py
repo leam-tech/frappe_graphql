@@ -4,7 +4,7 @@ from typing import List
 import frappe
 from .graphql import execute
 
-from .utils.variables import get_masked_variables
+from .utils.http import get_masked_variables, get_operation_name
 
 
 @frappe.whitelist(allow_guest=True)
@@ -112,7 +112,7 @@ def log_error(query, variables, operation_name, output):
     error_log = frappe.new_doc("GraphQL Error Log")
     error_log.update(frappe._dict(
         title="GraphQL API Error",
-        operation_name=operation_name,
+        operation_name=get_operation_name(query, operation_name),
         query=query,
         variables=frappe.as_json(get_masked_variables(query, variables)) if variables else None,
         output=frappe.as_json(output),
