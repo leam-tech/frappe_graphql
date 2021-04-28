@@ -6,9 +6,8 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "title",
-  "seen",
   "operation_name",
+  "seen",
   "query",
   "variables",
   "section_break_5",
@@ -16,12 +15,6 @@
   "traceback"
  ],
  "fields": [
-  {
-   "fieldname": "title",
-   "fieldtype": "Data",
-   "label": "Title",
-   "read_only": 1
-  },
   {
    "fieldname": "operation_name",
    "fieldtype": "Data",
@@ -66,9 +59,10 @@
    "read_only": 1
   }
  ],
+ "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-04-27 23:05:19.510053",
+ "modified": "2021-04-28 14:21:38.770483",
  "modified_by": "Administrator",
  "module": "Frappe Graphql",
  "name": "GraphQL Error Log",
@@ -88,5 +82,6 @@
   }
  ],
  "sort_field": "modified",
- "sort_order": "DESC"
+ "sort_order": "DESC",
+ "title_field": "operation_name"
 }
