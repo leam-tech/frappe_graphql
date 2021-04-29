@@ -1,0 +1,87 @@
+{
+ "actions": [],
+ "autoname": "GQL-ERR-.#####",
+ "creation": "2021-04-27 22:42:24.465758",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "operation_name",
+  "seen",
+  "query",
+  "variables",
+  "section_break_5",
+  "output",
+  "traceback"
+ ],
+ "fields": [
+  {
+   "fieldname": "operation_name",
+   "fieldtype": "Data",
+   "label": "Operation Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "query",
+   "fieldtype": "Code",
+   "in_list_view": 1,
+   "label": "Query / Mutation",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "variables",
+   "fieldtype": "Code",
+   "label": "Variables",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_5",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "output",
+   "fieldtype": "Code",
+   "label": "Output",
+   "read_only": 1
+  },
+  {
+   "fieldname": "traceback",
+   "fieldtype": "Code",
+   "label": "Traceback",
+   "read_only": 1
+  },
+  {
+   "fieldname": "seen",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Seen",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2021-04-28 14:21:38.770483",
+ "modified_by": "Administrator",
+ "module": "Frappe Graphql",
+ "name": "GraphQL Error Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "operation_name"
+}
