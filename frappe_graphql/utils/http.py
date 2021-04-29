@@ -55,7 +55,6 @@ def get_operation_name(query, operation_name):
     defined_operations = []
     try:
         document = parse(query)
-        print(document)
         for operation_definition in document.definitions:
             if operation_definition.kind != "operation_definition":
                 continue
