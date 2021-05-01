@@ -6,13 +6,13 @@ type User implements BaseDocType {
   modified: String
   modified_by: User!
   parent: BaseDocType
-  parent__name: String
   parentfield: String
   parenttype: String
   idx: Int
   docstatus: Int
   owner__name: String!
   modified_by__name: String!
+  parent__name: String
   enabled: Int
   email: String!
   last_name: String
@@ -40,7 +40,7 @@ type User implements BaseDocType {
   bio: String
   mute_sounds: Int
   mobile_no: String
-  new_password: String
+  new_password: Password
   logout_all_sessions: Int
   reset_password_key: String
   last_password_reset_date: String
@@ -63,7 +63,7 @@ type User implements BaseDocType {
   last_login: String
   last_known_versions: String
   api_key: String
-  api_secret: String
+  api_secret: Password
 }
 
 extend type User {

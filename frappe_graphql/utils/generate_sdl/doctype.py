@@ -139,9 +139,8 @@ def get_link_field_name_sdl(docfield):
 
 def get_graphql_type(docfield):
     string_fieldtypes = [
-        "Small Text", "Long Text", "Code", "Text Editor", "Markdown Editor",
-        "HTML Editor", "Date", "Datetime", "Time", "Text", "Data",
-        "Password", "Select", "Rating", "Read Only",
+        "Small Text", "Long Text", "Code", "Text Editor", "Markdown Editor", "HTML Editor",
+        "Date", "Datetime", "Time", "Text", "Data", "Select", "Rating", "Read Only",
         "Attach", "Attach Image", "Signature", "Color", "Barcode", "Geolocation", "Duration"
     ]
     int_fieldtypes = ["Int", "Long Int", "Check"]
@@ -160,6 +159,8 @@ def get_graphql_type(docfield):
         graphql_type = "BaseDocType"
     elif docfield.fieldtype in table_fields:
         graphql_type = f"[{docfield.options.replace(' ', '')}!]!"
+    elif docfield.fieldtype == "Password":
+        graphql_type = "Password"
     else:
         frappe.throw(f"Invalid fieldtype: {docfield.fieldtype}")
 
