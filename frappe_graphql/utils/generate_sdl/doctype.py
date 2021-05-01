@@ -14,6 +14,8 @@ def get_doctype_sdl(doctype, ignore_custom_fields=False):
     if not ignore_custom_fields and len(meta.get_custom_fields()):
         sdl += get_custom_field_sdl(meta, defined_fieldnames)
 
+    sdl += get_select_docfield_enums(meta=meta, ignore_custom_fields=ignore_custom_fields)
+
     # DocTypeSortingInput
     if not meta.issingle:
         sdl += get_sorting_input(meta)
@@ -53,7 +55,7 @@ def get_basic_doctype_sdl(meta: Meta):
         if cint(field.get("is_custom_field")):
             continue
         defined_fieldnames.append(field.fieldname)
-        sdl += f"\n  {get_field_sdl(field)}"
+        sdl += f"\n  {get_field_sdl(meta, field)}"
         if field.fieldtype in ("Link", "Dynamic Link"):
             sdl += f"\n  {get_link_field_name_sdl(field)}"
 
@@ -70,10 +72,28 @@ def get_custom_field_sdl(meta, defined_fieldnames):
         if field.fieldname in defined_fieldnames:
             continue
         defined_fieldnames.append(field.fieldname)
-        sdl += f"\n  {get_field_sdl(field)}"
+        sdl += f"\n  {get_field_sdl(meta, field)}"
         if field.fieldtype in ("Link", "Dynamic Link"):
             sdl += f"\n  {get_link_field_name_sdl(field)}"
     sdl += "\n}"
+
+    return sdl
+
+
+def get_select_docfield_enums(meta, ignore_custom_fields):
+    sdl = ""
+    for field in meta.get("fields", {"fieldtype": "Select"}):
+        if ignore_custom_fields and cint(field.get("is_custom_field")):
+            continue
+
+        sdl += "\n\n"
+        sdl += f"enum {get_select_docfield_enum_name(meta.name, field)} {{"
+        for option in (field.get("options") or "").split("\n"):
+            if not option or not len(option):
+                continue
+            sdl += f"\n  {frappe.scrub(option).upper()}"
+
+        sdl += "\n}"
 
     return sdl
 
@@ -139,18 +159,18 @@ def get_query_type_extension(meta: Meta):
     return sdl
 
 
-def get_field_sdl(docfield):
-    return f"{docfield.fieldname}: {get_graphql_type(docfield)}"
+def get_field_sdl(meta, docfield):
+    return f"{docfield.fieldname}: {get_graphql_type(meta, docfield)}"
 
 
 def get_link_field_name_sdl(docfield):
     return f"{docfield.fieldname}__name: String"
 
 
-def get_graphql_type(docfield):
+def get_graphql_type(meta, docfield):
     string_fieldtypes = [
         "Small Text", "Long Text", "Code", "Text Editor", "Markdown Editor", "HTML Editor",
-        "Date", "Datetime", "Time", "Text", "Data", "Select", "Rating", "Read Only",
+        "Date", "Datetime", "Time", "Text", "Data", "Rating", "Read Only",
         "Attach", "Attach Image", "Signature", "Color", "Barcode", "Geolocation", "Duration"
     ]
     int_fieldtypes = ["Int", "Long Int", "Check"]
@@ -171,6 +191,15 @@ def get_graphql_type(docfield):
         graphql_type = f"[{docfield.options.replace(' ', '')}!]!"
     elif docfield.fieldtype == "Password":
         graphql_type = "Password"
+    elif docfield.fieldtype == "Select":
+        graphql_type = get_select_docfield_enum_name(meta.name, docfield)
+
+        # Mark NonNull if there is no empty option and is required
+        has_empty_option = any([len(x or "") == 0 for x in (docfield.options or "").split("\n")])
+        if docfield.reqd and has_empty_option:
+            frappe.throw("Please fix your HEAD on select field: {}".format(docfield.name))
+        if docfield.reqd and not has_empty_option:
+            graphql_type += "!"
     else:
         frappe.throw(f"Invalid fieldtype: {docfield.fieldtype}")
 
@@ -187,3 +216,8 @@ def get_plural(doctype):
 
 def format_doctype(doctype):
     return doctype.replace(" ", "")
+
+
+def get_select_docfield_enum_name(doctype, docfield):
+    return f"{doctype}{(docfield.label or docfield.fieldname).title()}SelectOptions".replace(
+        " ", "")

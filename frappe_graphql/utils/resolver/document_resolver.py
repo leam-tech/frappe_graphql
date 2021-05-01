@@ -55,14 +55,18 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     if info.field_name.endswith("__name"):
         fieldname = info.field_name.split("__name")[0]
         return _get_value(fieldname)
-    elif df and df.fieldtype in ("Link", "Dynamic Link"):
-        if not _get_value(df.fieldname):
-            return None
-        link_dt = df.options if df.fieldtype == "Link" else \
-            _get_value(df.options)
-        return frappe._dict(name=_get_value(df.fieldname), doctype=link_dt)
-    else:
-        return _get_value(info.field_name)
+    elif df:
+        if df.fieldtype in ("Link", "Dynamic Link"):
+            if not _get_value(df.fieldname):
+                return None
+            link_dt = df.options if df.fieldtype == "Link" else \
+                _get_value(df.options)
+            return frappe._dict(name=_get_value(df.fieldname), doctype=link_dt)
+        elif df.fieldtype == "Select":
+            value = _get_value(df.fieldname) or ""
+            return frappe.scrub(value).upper()
+
+    return _get_value(info.field_name)
 
 
 def get_default_field_df(fieldname):
