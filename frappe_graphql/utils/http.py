@@ -13,8 +13,8 @@ def get_masked_variables(query, variables):
     variables = frappe._dict(variables)
     try:
         document = parse(query)
-        for operation_definition in getattr(document, "definitions", []):
-            for variable in getattr(operation_definition, "variable_definitions", []):
+        for operation_definition in (getattr(document, "definitions", None) or []):
+            for variable in (getattr(operation_definition, "variable_definitions", None) or []):
                 variable_name = variable.variable.name.value
                 variable_type = variable.type
 
