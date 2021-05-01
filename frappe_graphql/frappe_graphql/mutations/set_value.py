@@ -22,7 +22,7 @@ def set_value_resolver(obj, info: GraphQLResolveInfo, **kwargs):
         doctype=doctype,
         docname=name,
         fieldname=kwargs.get("fieldname"),
-        value=kwargs.get("value")
+        value=frappe.parse_json(kwargs.get("value"))
     )
     frappe.clear_document_cache(doctype, name)
     doc = frappe.get_doc(doctype, name).as_dict()
