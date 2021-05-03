@@ -13,7 +13,8 @@ interface BaseDocType {
   creation: String
   modified: String
   modified_by: User!
-  parent: String
+  parent: BaseDocType
+  parent__name: String
   parentfield: String
   parenttype: String
   idx: Int

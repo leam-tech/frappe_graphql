@@ -36,11 +36,14 @@ def get_basic_doctype_sdl(meta: Meta):
             fieldtype = "Int"
         elif field in ("owner", "modified_by"):
             fieldtype = "User!"
+        elif field == "parent":
+            fieldtype = "BaseDocType"
         else:
             fieldtype = "String"
         sdl += f"\n  {field}: {fieldtype}"
     sdl += "\n  owner__name: String!"
     sdl += "\n  modified_by__name: String!"
+    sdl += "\n  parent__name: String"
 
     for field in meta.fields:
         if field.fieldtype in display_fieldtypes:
@@ -51,7 +54,7 @@ def get_basic_doctype_sdl(meta: Meta):
             continue
         defined_fieldnames.append(field.fieldname)
         sdl += f"\n  {get_field_sdl(field)}"
-        if field.fieldtype == "Link":
+        if field.fieldtype in ("Link", "Dynamic Link"):
             sdl += f"\n  {get_link_field_name_sdl(field)}"
 
     sdl += "\n}"
@@ -68,7 +71,7 @@ def get_custom_field_sdl(meta, defined_fieldnames):
             continue
         defined_fieldnames.append(field.fieldname)
         sdl += f"\n  {get_field_sdl(field)}"
-        if field.fieldtype == "Link":
+        if field.fieldtype in ("Link", "Dynamic Link"):
             sdl += f"\n  {get_link_field_name_sdl(field)}"
     sdl += "\n}"
 
@@ -134,11 +137,11 @@ def get_link_field_name_sdl(docfield):
     return f"{docfield.fieldname}__name: String"
 
 
-def get_graphql_type(docfield, for_filter=False):
+def get_graphql_type(docfield):
     string_fieldtypes = [
         "Small Text", "Long Text", "Code", "Text Editor", "Markdown Editor",
         "HTML Editor", "Date", "Datetime", "Time", "Text", "Data",
-        "Dynamic Link", "Password", "Select", "Rating", "Read Only",
+        "Password", "Select", "Rating", "Read Only",
         "Attach", "Attach Image", "Signature", "Color", "Barcode", "Geolocation", "Duration"
     ]
     int_fieldtypes = ["Int", "Long Int", "Check"]
@@ -152,13 +155,15 @@ def get_graphql_type(docfield, for_filter=False):
     elif docfield.fieldtype in float_fieldtypes:
         graphql_type = "Float"
     elif docfield.fieldtype == "Link":
-        graphql_type = "String" if for_filter else f"{docfield.options.replace(' ', '')}"
+        graphql_type = f"{docfield.options.replace(' ', '')}"
+    elif docfield.fieldtype == "Dynamic Link":
+        graphql_type = "BaseDocType"
     elif docfield.fieldtype in table_fields:
         graphql_type = f"[{docfield.options.replace(' ', '')}!]!"
     else:
         frappe.throw(f"Invalid fieldtype: {docfield.fieldtype}")
 
-    if not for_filter and docfield.reqd and graphql_type[-1] != "!":
+    if docfield.reqd and graphql_type[-1] != "!":
         graphql_type += "!"
 
     return graphql_type
