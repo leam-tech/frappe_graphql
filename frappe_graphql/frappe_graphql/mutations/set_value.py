@@ -22,7 +22,7 @@ def set_value_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     name = kwargs.get("name")
     value = kwargs.get('value')
     fieldname = kwargs.get("fieldname")
-    if frappe.get_meta(doctype).get_field(kwargs.get("fieldname")).fieldtype \
+    if frappe.get_meta(doctype).get_field(fieldname).fieldtype \
         in table_fields:
         value = frappe.parse_json(value)
     frappe.set_value(
