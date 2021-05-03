@@ -18,7 +18,7 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
 
         # Permission check after the document is confirmed to exist
         # verbose check of is_owner of doc
-        frappe.has_permission(doctype=doctype, doc=obj.get("name"), throw=True)
+        frappe.has_permission(doctype=doctype, doc=cached_doc, throw=True)
         role_permissions = frappe.permissions.get_role_permissions(doctype)
         if role_permissions.get("if_owner", {}).get("read"):
             if cached_doc.get("owner") != frappe.session.user:

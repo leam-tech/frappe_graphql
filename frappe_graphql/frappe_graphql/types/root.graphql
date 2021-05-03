@@ -28,9 +28,15 @@ type SET_VALUE_TYPE {
     doctype: String!
     name: String!
     fieldname: String!
-    value: String!
+    value: DOCFIELD_VALUE_TYPE!
     doc: BaseDocType!
 }
+
+
+"""
+Supports ID | Boolean | Int | String | Float | JSONString
+"""
+scalar DOCFIELD_VALUE_TYPE
 
 type SAVE_DOC_TYPE {
     doctype: String!
@@ -47,7 +53,7 @@ type DELETE_DOC_TYPE {
 type Mutation {
 
     # Basic Document Mutations
-    setValue(doctype: String!, name: String!, fieldname: String!, value: String): SET_VALUE_TYPE
+    setValue(doctype: String!, name: String!, fieldname: String!, value: DOCFIELD_VALUE_TYPE!): SET_VALUE_TYPE
     saveDoc(doctype: String!, doc: String!): SAVE_DOC_TYPE
     deleteDoc(doctype: String!, name: String!): DELETE_DOC_TYPE
 
