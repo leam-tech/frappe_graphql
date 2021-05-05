@@ -12,6 +12,7 @@ class CursorPaginator(object):
             skip_process_filters=False,
             count_resolver=None,
             node_resolver=None,
+            default_sorting_fields=None,
             extra_args=None):
 
         if (not count_resolver) != (not node_resolver):
@@ -23,6 +24,9 @@ class CursorPaginator(object):
         self.skip_process_filters = skip_process_filters
         self.custom_count_resolver = count_resolver
         self.custom_node_resolver = node_resolver
+        self.default_sorting_fields = default_sorting_fields
+
+        # Extra Args are helpful for custom resolvers
         self.extra_args = extra_args
 
     def resolve(self, obj, info: GraphQLResolveInfo, **kwargs):
@@ -137,8 +141,17 @@ class CursorPaginator(object):
         )
 
     def get_sort_args(self, sorting_input=None):
-        sorting_fields = ["modified"]
         sort_dir = "desc"
+        if not self.default_sorting_fields:
+            meta = frappe.get_meta(self.doctype)
+            if meta.istable:
+                sort_dir = "asc"
+                sorting_fields = ["idx", "modified"]
+            else:
+                sorting_fields = ["modified"]
+        else:
+            sorting_fields = self.default_sorting_fields
+
         if sorting_input and sorting_input.get("field"):
             sort_dir = sorting_input.get("direction").lower() \
                 if sorting_input.get("direction") else "asc"
@@ -216,7 +229,7 @@ class CursorPaginator(object):
 
             or_conditions.append("({})".format(" AND ".join(and_conditions)))
 
-        return " OR ".join(or_conditions)
+        return "({})".format(" OR ".join(or_conditions))
 
     def to_cursor(self, row, sorting_fields):
         # sorting_fields could be [custom_table.field_1],
