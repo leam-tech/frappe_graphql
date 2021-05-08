@@ -1,0 +1,26 @@
+enum SubscriptionError {
+  INVALID_SUBSCRIPTION
+  SUBSCRIPTION_NOT_FOUND
+}
+
+type SubscriptionInfo {
+  error: SubscriptionError
+  success: Boolean!
+  subscription_id: String
+  subscribed_at: String
+  variables: String
+}
+
+type DocEvent implements BaseSubscription {
+  doctype: String!
+  name: String!
+  event: String!
+  document: BaseDocType!
+  triggered_by: User!
+  subscription_id: String!
+}
+
+type UserLogin implements BaseSubscription {
+  user: User
+  subscription_id: String!
+}
