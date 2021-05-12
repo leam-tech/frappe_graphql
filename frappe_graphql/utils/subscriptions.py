@@ -30,7 +30,8 @@ def setup_subscription(subscription, info: GraphQLResolveInfo, variables):
         last_ping=now_datetime(),
         variables=variables,
         subscription_id=subscription_id,
-        selection_set=excluded_field_nodes
+        selection_set=excluded_field_nodes,
+        user=frappe.session.user
     )
 
     frappe.cache().hset(
@@ -63,6 +64,9 @@ def notify_consumer(subscription, subscription_id, data):
     if not consumer:
         return
 
+    original_user = frappe.session.user
+    frappe.set_user(consumer.user)
+
     data = gql_transform(subscription, consumer.selection_set, data or frappe._dict())
     room = get_task_room(subscription_id)
 
@@ -71,6 +75,7 @@ def notify_consumer(subscription, subscription_id, data):
         message=data,
         room=room
     )
+    frappe.set_user(original_user)
 
 
 def notify_all_consumers(subscription, data):
