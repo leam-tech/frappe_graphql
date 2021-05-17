@@ -135,6 +135,9 @@ def filter_selection_set(info: GraphQLResolveInfo):
     it is safe to assume that there is going to be only a single subscription per operation
     http://spec.graphql.org/June2018/#sec-Subscription-Operation-Definitions
     """
+    from graphql import Location
+    from .pyutils import unfreeze
+
     excluded_field_nodes = []
 
     def _should_include(field_node: FieldNode):
@@ -144,8 +147,10 @@ def filter_selection_set(info: GraphQLResolveInfo):
         if field_node.name.value == "subscription_id":
             return True
 
-        excluded_field_nodes.append(field_node)
+        # Location is a highly nested AST type
+        excluded_field_nodes.append(unfreeze(field_node, ignore_types=[Location]))
         return False
+
     info.field_nodes[0].selection_set.selections = [
         x for x in info.field_nodes[0].selection_set.selections if _should_include(x)]
 
