@@ -1,6 +1,20 @@
 # Subscriptions
 GraphQL Spec allows us to be really flexible in choosing the transport for realtime communication. Here, frappe's existing Socket IO implementation is being used to get the same.
 
+Our target is to have an implementation that conforms to:
+https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md    
+
+Server --> Client Message Types:
+- GQL_DATA
+- GQL_COMPLETE
+
+Only the above two are implemented as of now. Once we have a mechanism for SocketIO -> Python communication in frappe, we can implement the complete spec
+which includes types like:
+- GQL_START
+- GQL_STOP
+- GQL_CONNECTION_ACK
+- GQL_CONNECTION_KEEP_ALIVE
+
 ## Protocol Overview
 1. Client will send in a GQL Subscription Query
     <details><summary>Example</summary>
@@ -72,6 +86,8 @@ GraphQL Spec allows us to be really flexible in choosing the transport for realt
     ```
     </details>
 5. Done, wait for your subscription events.
+6. By default, Subscriptions auto-complete on Error. You can change the behavior while calling `setup_subscription(complete_on_error=False)`
+7. You can complete manually by calling `complete_subscription("doc_events", "a789df0")`
 
 ## Creating New Subscriptions
 frappe_graphql provides a couple of subscription utility functions. They can be called to make events easily. Some of them are:
@@ -79,6 +95,7 @@ frappe_graphql provides a couple of subscription utility functions. They can be 
 - `frappe_graphql.get_consumers`
 - `frappe_graphql.notify_consumer`
 - `frappe_graphql.notify_all_consumers`
+- `frappe_graphql.complete_subscription`
 
 Please go through the following examples to get better idea on when to use them
 
@@ -205,6 +222,7 @@ def bind(schema: GraphQLSchema):
 
 
 def user_login_resolver(obj, info: GraphQLResolveInfo, **kwargs):
+    frappe.only_for("System Manager")
     return setup_subscription(
         subscription="user_login",
         info=info,

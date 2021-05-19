@@ -9,14 +9,32 @@ from frappe.utils import now_datetime, get_datetime
 from frappe_graphql import get_schema
 from frappe_graphql.utils.resolver import default_field_resolver
 
+"""
+Implemented similar to
+https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md
 
-def setup_subscription(subscription, info: GraphQLResolveInfo, variables):
+Server --> Client Message Types:
+- GQL_DATA
+- GQL_COMPLETE
+
+Only the above two are implemented as of now. Once we have a mechanism for
+SocketIO -> Python communication in frappe, we can implement the complete spec
+which includes types like:
+- GQL_START
+- GQL_STOP
+- GQL_CONNECTION_ACK
+- GQL_CONNECTION_KEEP_ALIVE
+"""
+
+
+def setup_subscription(subscription, info: GraphQLResolveInfo, variables, complete_on_error=False):
     """
     Set up a frappe task room for the subscription
     Args:
         subscription: The name of the subscription, usually the field name itself
         info: The graphql resolve info
         variables: incoming variable dict object
+        complete_on_error: Stop / Send Completed Event on GQL Error
 
     Returns:
         Subscription info, including the subscription_id
@@ -31,7 +49,8 @@ def setup_subscription(subscription, info: GraphQLResolveInfo, variables):
         variables=variables,
         subscription_id=subscription_id,
         selection_set=excluded_field_nodes,
-        user=frappe.session.user
+        user=frappe.session.user,
+        complete_on_error=complete_on_error
     )
 
     frappe.cache().hset(
@@ -67,15 +86,46 @@ def notify_consumer(subscription, subscription_id, data):
     original_user = frappe.session.user
     frappe.set_user(consumer.user)
 
-    data = gql_transform(subscription, consumer.selection_set, data or frappe._dict())
-    room = get_task_room(subscription_id)
+    execution_data = gql_transform(subscription, consumer.selection_set, data or frappe._dict())
+    response = frappe._dict(
+        type="GQL_DATA",
+        id=subscription_id,
+        payload=execution_data
+    )
 
+    room = get_task_room(subscription_id)
     emit_via_redis(
         event=subscription,
-        message=data,
+        message=response,
         room=room
     )
+
+    errors = data.get("errors", [])
+    if len(errors) and consumer.complete_on_error:
+        complete_subscription(subscription=subscription, subscription_id=subscription_id)
     frappe.set_user(original_user)
+
+
+def complete_subscription(subscription, subscription_id, data=None):
+    consumer = frappe.cache().hget(
+        get_subscription_redis_key(subscription),
+        subscription_id
+    )
+    if not consumer:
+        return
+
+    response = frappe._dict(
+        id="GQL_COMPLETE",
+        payload=data
+    )
+
+    room = get_task_room(subscription_id)
+    emit_via_redis(
+        event=subscription,
+        message=response,
+        room=room
+    )
+    frappe.cache().hdel(get_subscription_redis_key(subscription), subscription_id)
 
 
 def notify_all_consumers(subscription, data):
