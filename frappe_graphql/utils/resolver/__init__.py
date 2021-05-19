@@ -3,6 +3,7 @@ from graphql import GraphQLObjectType, GraphQLResolveInfo
 
 import frappe
 from frappe.model.document import Document
+from frappe.model.meta import is_single
 
 from frappe_graphql import CursorPaginator
 from .document_resolver import document_resolver
@@ -17,10 +18,12 @@ def default_field_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
 
     if parent_type.name == "Query":
         # This section is executed on root query type fields
-        singular_doctype = get_singular_doctype(info.field_name)
-        if singular_doctype:
+        dt = get_singular_doctype(info.field_name)
+        if dt:
+            if is_single(dt):
+                kwargs["name"] = dt
             return frappe._dict(
-                doctype=singular_doctype,
+                doctype=dt,
                 name=kwargs.get("name")
             )
 
