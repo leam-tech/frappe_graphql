@@ -35,7 +35,6 @@ graphql_schema_processors = [
 
     # Subscriptions
     "frappe_graphql.frappe_graphql.subscription.doc_events.bind",
-    "frappe_graphql.frappe_graphql.subscription.user_login.bind"
 ]
 
 doc_events = {
@@ -45,8 +44,6 @@ doc_events = {
     }
 }
 
-# User Login Subscription
-on_login = "frappe_graphql.frappe_graphql.subscription.user_login.on_login"
 
 # Includes in <head>
 # ------------------

@@ -33,6 +33,9 @@ def notify_consumers(doctype, name, triggered_by):
         return
 
     for consumer in get_consumers("doc_events"):
+        doctypes = consumer.variables.get("doctypes", [])
+        if len(doctypes) and doctype not in doctypes:
+            continue
         notify_consumer(
             subscription="doc_events",
             subscription_id=consumer.subscription_id,

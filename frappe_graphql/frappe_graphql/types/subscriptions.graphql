@@ -19,8 +19,3 @@ type DocEvent implements BaseSubscription {
   triggered_by: User!
   subscription_id: String!
 }
-
-type UserLogin implements BaseSubscription {
-  user: User
-  subscription_id: String!
-}

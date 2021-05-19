@@ -21,7 +21,7 @@ which includes types like:
 
     ```gql
     subscription {
-        doc_events {
+        doc_events(doctypes: ["User"]) {
             subscription_id
             doctype
             name
@@ -166,6 +166,10 @@ def notify_consumers(doctype, name, triggered_by):
     for consumer in get_consumers("doc_events"):
         variables = frappe._dict(frappe.parse_json(consumer.variables or "{}"))
         if variables.get("doctypes") and doctype not in variables["doctypes"]:
+            continue
+
+        doctypes = consumer.variables.get("doctypes", [])
+        if len(doctypes) and doctype not in doctypes:
             continue
 
         notify_consumer(
