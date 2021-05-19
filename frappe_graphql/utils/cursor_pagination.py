@@ -183,6 +183,35 @@ class CursorPaginator(object):
         return filters
 
     def get_cursor_filter(self):
+        """
+        Inspired from
+        - https://stackoverflow.com/a/38017813/2041598
+
+        Examples:
+        Cursor: {colA > A}
+            -> (colA > A)
+
+        Cursor: {colA > A, colB > B}
+            -> (colA >= A AND (colA > A OR colB > B))
+
+        Cursor: {colA > A, colB > B, colC > C}
+            -> (colA >= A AND (colA > A OR (colB >= B AND (colB > B OR colC > C))))
+
+        Cursor: {colA < A}
+            -> (colA <= A OR colA IS NULL)
+
+        Cursor: {colA < A, colB < B}
+            -> (colA <= A OR colA IS NULL AND
+                ((colA < A OR colA IS NULL) OR (colB < B OR colB IS NULL)))
+
+        !! NONE Cursors !!:
+
+        Cursor: {colA > None, colB > B}
+            -> ((colA IS NULL && colB > B) OR colA IS NOT NULL)
+
+        Cursor: {colA < None, colB < B}
+            -> (colB IS NULL AND (colB < B OR colB IS NONE))
+        """
         cursor_values = self.from_cursor(self.cursor)
         operator_map = {
             "after": {"asc": ">", "desc": "<"},
@@ -201,35 +230,73 @@ class CursorPaginator(object):
         def db_escape(v):
             return frappe.db.escape(v)
 
-        or_conditions = []
-        for index, field_name in enumerate(self.sorting_fields):
-            if cursor_values[index] is None and operator == ">":
-                continue
-
-            and_conditions = []
-            for cursor_id, cursor_value in enumerate(cursor_values[:index]):
-                and_conditions.append(
-                    f"{format_column_name(self.sorting_fields[cursor_id])} = "
-                    + f"{db_escape(cursor_value)}")
-
+        def _get_cursor_column_condition(operator, column, value, include_equals=False):
             if operator == ">":
-                and_conditions.append(
-                    f"({format_column_name(field_name)} "
-                    + f"{operator} {db_escape(cursor_values[index])} OR "
-                    + f"{format_column_name(field_name)} IS NULL)")
-            elif cursor_values[index] is not None:
-                and_conditions.append(
-                    f"{format_column_name(field_name)} "
-                    + f"{operator} {db_escape(cursor_values[index])}"
-                )
+                return format_column_name(column) \
+                    + f" {operator}{'=' if include_equals else ''} " \
+                    + db_escape(value)
             else:
-                and_conditions.append(
-                    f"{format_column_name(field_name)} IS NOT NULL"
-                )
+                if value is None:
+                    return format_column_name(column) \
+                        + " IS NULL"
+                return "(" \
+                    + format_column_name(column) \
+                    + f" {operator}{'=' if include_equals else ''} " \
+                    + db_escape(value) \
+                    + " OR " \
+                    + format_column_name(column) \
+                    + " IS NULL)"
 
-            or_conditions.append("({})".format(" AND ".join(and_conditions)))
+        def _get_cursor_condition(sorting_fields, values):
+            """
+            Returns
+            sf[0]_cnd AND (sf[0]_cnd OR (sf[1:]))
+            """
+            nonlocal operator
 
-        return "({})".format(" OR ".join(or_conditions))
+            if operator == ">" and values[0] is None:
+                sub_condition = ""
+                if len(sorting_fields) > 1:
+                    sub_condition = _get_cursor_condition(
+                        sorting_fields=sorting_fields[1:], values=values[1:])
+
+                if sub_condition:
+                    return f"(({format_column_name(sorting_fields[0])} IS NULL AND {sub_condition})" \
+                        + f" OR {format_column_name(sorting_fields[0])} IS NOT NULL)"
+                return ""
+
+            condition = _get_cursor_column_condition(
+                operator=operator,
+                column=sorting_fields[0],
+                value=values[0],
+                include_equals=len(sorting_fields) > 1
+            )
+
+            if len(sorting_fields) == 1:
+                return condition
+
+            next_condition = _get_cursor_condition(
+                sorting_fields=sorting_fields[1:], values=values[1:])
+
+            if next_condition:
+                if values[0] is not None:
+                    condition += " AND (" + _get_cursor_column_condition(
+                        operator=operator,
+                        column=sorting_fields[0],
+                        value=values[0]
+                    )
+                    condition += f" OR {next_condition})"
+                else:
+                    # If values[0] is none
+                    # sf[0] is NULL AND (sf[1:]) condition is used
+                    condition += f" AND ({next_condition})"
+
+            return condition
+
+        if len(self.sorting_fields) != len(cursor_values):
+            frappe.throw("Invalid Cursor")
+
+        return _get_cursor_condition(sorting_fields=self.sorting_fields, values=cursor_values)
 
     def to_cursor(self, row, sorting_fields):
         # sorting_fields could be [custom_table.field_1],
