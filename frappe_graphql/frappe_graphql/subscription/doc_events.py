@@ -17,6 +17,8 @@ def doc_events_resolver(obj, info: GraphQLResolveInfo, **kwargs):
 
 
 def on_change(doc, method=None):
+    if frappe.flags.in_migrate:
+        return
     frappe.enqueue(
         notify_consumers,
         enqueue_after_commit=True,

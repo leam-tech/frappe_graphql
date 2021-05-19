@@ -1,6 +1,6 @@
 from datetime import timedelta
 from graphql import GraphQLResolveInfo, ExecutionContext, DocumentNode, GraphQLField, \
-    FieldNode, parse
+    FieldNode, GraphQLError, parse
 
 import frappe
 from frappe.realtime import emit_via_redis
@@ -100,9 +100,11 @@ def notify_consumer(subscription, subscription_id, data):
         room=room
     )
 
-    errors = data.get("errors", [])
-    if len(errors) and consumer.complete_on_error:
-        complete_subscription(subscription=subscription, subscription_id=subscription_id)
+    if len(execution_data.get("errors") or []):
+        log_error(consumer, execution_data)
+        if consumer.complete_on_error:
+            complete_subscription(subscription=subscription, subscription_id=subscription_id)
+
     frappe.set_user(original_user)
 
 
@@ -176,6 +178,43 @@ def gql_transform(subscription, selection_set, obj):
         del result.get("data")["__subscription__"]
 
     return result
+
+
+def log_error(subscription, subscription_id, output):
+    import traceback as tb
+
+    consumer = frappe.cache().hget(
+        get_subscription_redis_key(subscription),
+        subscription_id
+    )
+    tracebacks = []
+    for idx, err in enumerate(output.errors):
+        if not isinstance(err, GraphQLError):
+            continue
+
+        exc = err.original_error
+        if not exc:
+            continue
+        tracebacks.append(
+            f"GQLError #{idx}\n"
+            + f"{str(err)}\n\n"
+            + f"{''.join(tb.format_exception(exc, exc, exc.__traceback__))}"
+        )
+
+    tracebacks.append(f"Frappe Traceback: \n{frappe.get_traceback()}")
+    if frappe.conf.get("developer_mode"):
+        frappe.errprint(tracebacks)
+
+    tracebacks = "\n==========================================\n".join(tracebacks)
+    error_log = frappe.new_doc("GraphQL Error Log")
+    error_log.update(frappe._dict(
+        title="GraphQL Subscription Error",
+        operation_name=subscription,
+        variables=frappe.as_json(consumer.variables),
+        output=frappe.as_json(output),
+        traceback=tracebacks
+    ))
+    error_log.insert(ignore_permissions=True)
 
 
 def filter_selection_set(info: GraphQLResolveInfo):
