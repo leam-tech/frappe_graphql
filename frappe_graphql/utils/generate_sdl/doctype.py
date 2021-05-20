@@ -15,9 +15,9 @@ def get_doctype_sdl(doctype, ignore_custom_fields=False):
         sdl += get_custom_field_sdl(meta, defined_fieldnames)
 
     # DocTypeSortingInput
-    sdl += get_sorting_input(meta)
-
-    sdl += get_connection_type(meta)
+    if not meta.issingle:
+        sdl += get_sorting_input(meta)
+        sdl += get_connection_type(meta)
 
     # Extend QueryType
     sdl += get_query_type_extension(meta)
@@ -117,9 +117,11 @@ def get_connection_type(meta):
 def get_query_type_extension(meta: Meta):
     dt = format_doctype(meta.name)
     sdl = "\n\nextend type Query {"
-    sdl += f"\n  {dt}(name: String!): {dt}!"
+    if meta.issingle:
+        sdl += f"\n  {dt}: {dt}!"
+    else:
+        sdl += f"\n  {dt}(name: String!): {dt}!"
 
-    if not meta.issingle:
         plural_dt = get_plural(meta.name)
         sdl += f"\n  {plural_dt}(filter: [DBFilterInput], sortBy: {dt}SortingInput, "
         sdl += "before: String, after: String, "
