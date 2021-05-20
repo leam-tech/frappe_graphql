@@ -2,25 +2,25 @@ scalar Upload
 scalar Password
 
 schema {
-	query: Query
-	mutation: Mutation
+    query: Query
+    mutation: Mutation
 }
 
 interface BaseDocType {
-  doctype: String
-  name: String
-  owner: User!
-  creation: String
-  modified: String
-  modified_by: User!
-  parent: BaseDocType
-  parent__name: String
-  parentfield: String
-  parenttype: String
-  idx: Int
-  docstatus: Int
-  owner__name: String!
-  modified_by__name: String!
+    doctype: String
+    name: String
+    owner: User!
+    creation: String
+    modified: String
+    modified_by: User!
+    parent: BaseDocType
+    parent__name: String
+    parentfield: String
+    parenttype: String
+    idx: Int
+    docstatus: Int
+    owner__name: String!
+    modified_by__name: String!
 }
 
 
@@ -50,46 +50,54 @@ type DELETE_DOC_TYPE {
     success: Boolean!
 }
 
+type BulkDeleteDocs {
+    queued: Boolean!
+    success: Boolean!
+    success_count: Int!
+    failure_count: Int!
+}
+
 type Mutation {
 
     # Basic Document Mutations
     setValue(doctype: String!, name: String!, fieldname: String!, value: DOCFIELD_VALUE_TYPE!): SET_VALUE_TYPE
     saveDoc(doctype: String!, doc: String!): SAVE_DOC_TYPE
     deleteDoc(doctype: String!, name: String!): DELETE_DOC_TYPE
+    bulkDeleteDocs(doctype: String!, ids: [ID!]!): BulkDeleteDocs
 
     uploadFile(file: Upload!, is_private: Boolean, attached_to_doctype: String,
         attached_to_name: String, fieldname: String): File
 }
 
 type Query {
-	ping: String!
+    ping: String!
 }
 
 enum DBFilterOperator {
-  EQ
-  NEQ
-  LT
-  GT
-  LTE
-  GTE
-  LIKE
-  NOT_LIKE
+    EQ
+    NEQ
+    LT
+    GT
+    LTE
+    GTE
+    LIKE
+    NOT_LIKE
 }
 
 input DBFilterInput {
-  fieldname: String!
-  operator: DBFilterOperator
-  value: String!
+    fieldname: String!
+    operator: DBFilterOperator
+    value: String!
 }
 
 enum SortDirection {
-  ASC
-  DESC
+    ASC
+    DESC
 }
 
 type PageInfo {
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String
-  endCursor: String
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
 }

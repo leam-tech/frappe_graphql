@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 # from . import __version__ as app_version
 
 app_name = "frappe_graphql"
@@ -23,6 +24,7 @@ graphql_schema_processors = [
     "frappe_graphql.frappe_graphql.mutations.set_value.bind",
     "frappe_graphql.frappe_graphql.mutations.save_doc.bind",
     "frappe_graphql.frappe_graphql.mutations.delete_doc.bind",
+    "frappe_graphql.frappe_graphql.mutations.bulk_delete_docs.bind",
 
     "frappe_graphql.frappe_graphql.mutations.upload_file.bind",
 ]
