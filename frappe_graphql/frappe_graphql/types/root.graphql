@@ -2,25 +2,25 @@ scalar Upload
 scalar Password
 
 schema {
-    query: Query
-    mutation: Mutation
+	query: Query
+	mutation: Mutation
 }
 
 interface BaseDocType {
-    doctype: String
-    name: String
-    owner: User!
-    creation: String
-    modified: String
-    modified_by: User!
-    parent: BaseDocType
-    parent__name: String
-    parentfield: String
-    parenttype: String
-    idx: Int
-    docstatus: Int
-    owner__name: String!
-    modified_by__name: String!
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: BaseDocType
+  parent__name: String
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
 }
 
 
@@ -70,34 +70,34 @@ type Mutation {
 }
 
 type Query {
-    ping: String!
+	ping: String!
 }
 
 enum DBFilterOperator {
-    EQ
-    NEQ
-    LT
-    GT
-    LTE
-    GTE
-    LIKE
-    NOT_LIKE
+  EQ
+  NEQ
+  LT
+  GT
+  LTE
+  GTE
+  LIKE
+  NOT_LIKE
 }
 
 input DBFilterInput {
-    fieldname: String!
-    operator: DBFilterOperator
-    value: String!
+  fieldname: String!
+  operator: DBFilterOperator
+  value: String!
 }
 
 enum SortDirection {
-    ASC
-    DESC
+  ASC
+  DESC
 }
 
 type PageInfo {
-    hasNextPage: Boolean!
-    hasPreviousPage: Boolean!
-    startCursor: String
-    endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
 }
