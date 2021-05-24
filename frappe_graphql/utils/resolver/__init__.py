@@ -22,6 +22,9 @@ def default_field_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
         if dt:
             if is_single(dt):
                 kwargs["name"] = dt
+            elif not frappe.db.exists(dt, kwargs.get("name")):
+                raise frappe.DoesNotExistError(
+                    frappe._("{0} {1} not found").format(frappe._(dt), kwargs.get("name")))
             return frappe._dict(
                 doctype=dt,
                 name=kwargs.get("name")
