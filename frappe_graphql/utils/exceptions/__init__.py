@@ -1,3 +1,6 @@
+from .error_coded_exceptions import *  # noqa
+
+
 class GraphQLFileSyntaxError(Exception):
     def __init__(self, schema_file, message) -> None:
         super().__init__()

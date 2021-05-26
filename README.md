@@ -199,6 +199,10 @@ You can pass in a list of cmd that gets executed on schema creation. You are giv
 This is a good place to attach the resolvers for the custom SDLs defined via `graphql_sdl_dir`
 <hr/>
 
+## Exception Handling in Resolvers
+We provide a utility resolver wrapper function which could be used to return your expected exceptions as user errors. You can read more about it [here](./docs/resolvers_and_exceptions.md).
+<hr/>
+
 ## Examples
 ### Adding a newly created DocType
 - Generate the SDLs in your app directory
