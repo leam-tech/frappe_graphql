@@ -1,6 +1,7 @@
 from graphql import GraphQLSchema, GraphQLResolveInfo, GraphQLObjectType
 
 import frappe
+from frappe.model.meta import is_single
 
 
 def bind(schema: GraphQLSchema):
@@ -18,6 +19,9 @@ def bind(schema: GraphQLSchema):
 def save_doc_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     new_doc = frappe.parse_json(kwargs.get("doc"))
     new_doc.doctype = kwargs.get("doctype")
+
+    if is_single(new_doc.doctype):
+        new_doc.name = new_doc.doctype
 
     if new_doc.name and frappe.db.exists(new_doc.doctype, new_doc.name):
         doc = frappe.get_doc(new_doc.doctype, new_doc.name)
