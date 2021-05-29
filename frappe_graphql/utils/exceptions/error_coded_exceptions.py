@@ -5,11 +5,13 @@ from typing import List
 class GQLExecutionUserError(Exception):
     error_code = "UNKNOWN_ERROR"
     message = "Unknown Error"
+    additional_data = frappe._dict()
 
     def as_dict(self):
         return frappe._dict(
             error_code=self.error_code,
-            message=self.message
+            message=self.message,
+            **self.additional_data
         )
 
 
@@ -21,24 +23,26 @@ class GQLExecutionUserErrorMultiple(Exception):
 
     def as_dict_list(self):
         return [
-            frappe._dict(error_code=x.error_code, message=x.message)
+            x.as_dict()
             for x in self.errors
         ]
 
 
-def ERROR_CODED_EXCEPTIONS():
+def ERROR_CODED_EXCEPTIONS(error_key="errors"):
     def inner(func):
         def wrapper(*args, **kwargs):
             try:
                 response = func(*args, **kwargs)
-                response["error_codes"] = []
+                response[error_key] = []
                 return response
             except GQLExecutionUserError as e:
-                return frappe._dict(
-                    errors=[e.as_dict()]
-                )
+                return frappe._dict({
+                    error_key: [e.as_dict()]
+                })
             except GQLExecutionUserErrorMultiple as e:
-                return e.as_dict_list()
+                return frappe._dict({
+                    error_key: e.as_dict_list()
+                })
 
         return wrapper
 
