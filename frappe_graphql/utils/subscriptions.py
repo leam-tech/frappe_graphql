@@ -101,7 +101,10 @@ def notify_consumer(subscription, subscription_id, data):
     )
 
     if len(execution_data.get("errors") or []):
-        log_error(consumer, execution_data)
+        log_error(
+            subscription=subscription,
+            subscription_id=subscription_id,
+            output=execution_data)
         if consumer.complete_on_error:
             complete_subscription(subscription=subscription, subscription_id=subscription_id)
 
