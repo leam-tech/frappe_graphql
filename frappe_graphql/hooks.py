@@ -16,6 +16,12 @@ graphql_sdl_dir = [
     "./frappe_graphql/frappe_graphql/frappe_graphql/types"
 ]
 
+scheduler_events = {
+    "all": [
+        "frappe_graphql.utils.subscriptions.remove_inactive_consumers"
+    ]
+}
+
 graphql_schema_processors = [
     # Queries
     "frappe_graphql.frappe_graphql.queries.ping.bind",
@@ -27,7 +33,19 @@ graphql_schema_processors = [
     "frappe_graphql.frappe_graphql.mutations.bulk_delete_docs.bind",
 
     "frappe_graphql.frappe_graphql.mutations.upload_file.bind",
+    "frappe_graphql.frappe_graphql.mutations.subscription_keepalive.bind",
+
+    # Subscriptions
+    "frappe_graphql.frappe_graphql.subscription.doc_events.bind",
 ]
+
+doc_events = {
+    "*": {
+        # Doc Events Subscription
+        "on_change": "frappe_graphql.frappe_graphql.subscription.doc_events.on_change"
+    }
+}
+
 
 # Includes in <head>
 # ------------------

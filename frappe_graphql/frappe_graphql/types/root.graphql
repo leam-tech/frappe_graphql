@@ -4,6 +4,7 @@ scalar Password
 schema {
 	query: Query
 	mutation: Mutation
+  subscription: Subscription
 }
 
 interface BaseDocType {
@@ -21,6 +22,10 @@ interface BaseDocType {
   docstatus: Int
   owner__name: String!
   modified_by__name: String!
+}
+
+interface BaseSubscription {
+  subscription_id: String!
 }
 
 
@@ -67,10 +72,17 @@ type Mutation {
 
     uploadFile(file: Upload!, is_private: Boolean, attached_to_doctype: String,
         attached_to_name: String, fieldname: String): File
+    
+    # Subscription KeepAlive
+    subscriptionKeepAlive(subscription: String!, subscription_id: String!): SubscriptionInfo!
 }
 
 type Query {
 	ping: String!
+}
+
+type Subscription {
+  doc_events(doctypes: [String!]): DocEvent
 }
 
 enum DBFilterOperator {

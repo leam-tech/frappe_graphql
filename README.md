@@ -114,6 +114,10 @@ Result
 </details>
 <hr/>
 
+## Subscriptions
+Get notified instantly of the updates via existing frappe's SocketIO. Please read more on the implementation details [here](./docs/subscriptions.md)
+<hr/>
+
 ## File Uploads
 File uploads can be done following the [GraphQL multipart request specification](https://github.com/jaydenseric/graphql-multipart-request-spec). `uploadFile` mutation is included implementing the same
 
@@ -343,7 +347,6 @@ There are two ways:
             resolve=_myMutationResolver
         )
     ```
-### Adding a new Subscription
 
 ### Modify the Schema randomly
 ```py
@@ -351,6 +354,3 @@ def schema_processor(schema: GraphQLSchema):
     schema.query_type.fields["hello"] = GraphQLField(
         GraphQLString, resolve=lambda obj, info: "World!")
 ```
-
-## Subscriptions
-Get notified instantly of the updates via existing frappe's SocketIO
