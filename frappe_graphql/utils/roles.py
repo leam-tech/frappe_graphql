@@ -18,7 +18,7 @@ def REQUIRE_ROLES(role: Union[str, List[str]], exc=frappe.PermissionError):
 
             if len(roles):
                 exc = exc or frappe.PermissionError
-                raise exc("Permission Denied")
+                raise exc(frappe._("Permission Denied"))
 
             return func(*args, **kwargs)
 
