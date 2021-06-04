@@ -203,8 +203,9 @@ You can pass in a list of cmd that gets executed on schema creation. You are giv
 This is a good place to attach the resolvers for the custom SDLs defined via `graphql_sdl_dir`
 <hr/>
 
-## Exception Handling in Resolvers
-We provide a utility resolver wrapper function which could be used to return your expected exceptions as user errors. You can read more about it [here](./docs/resolvers_and_exceptions.md).
+## Helper wrappers
+- Exception Handling in Resolvers. We provide a utility resolver wrapper function which could be used to return your expected exceptions as user errors. You can read more about it [here](./docs/resolvers_and_exceptions.md).
+- Role Permissions for Resolver. We provide another utility resolver wrapper function which could be used to verify the logged in User has the roles specified. You can read more about it [here](./docs/resolver_role_permissions.md)
 <hr/>
 
 ## Examples
