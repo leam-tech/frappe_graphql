@@ -133,6 +133,22 @@ def complete_subscription(subscription, subscription_id, data=None):
     frappe.cache().hdel(get_subscription_redis_key(subscription), subscription_id)
 
 
+def notify_consumers(subscription, subscription_ids, data):
+    """
+    Notify a set of consumers
+    Args:
+        subscription: The name of the subscription
+        subscription_ids: List[str] of Subscription Ids
+        data: The event data to send
+    """
+
+    for id in subscription_ids:
+        notify_consumer(
+            subscription=subscription,
+            subscription_id=id,
+            data=data)
+
+
 def notify_all_consumers(subscription, data):
     """
     Notify all Consumers of subscription
@@ -212,6 +228,7 @@ def log_error(subscription, subscription_id, output):
     error_log = frappe.new_doc("GraphQL Error Log")
     error_log.update(frappe._dict(
         title="GraphQL Subscription Error",
+        query="-- subscription --",
         operation_name=subscription,
         variables=frappe.as_json(consumer.variables),
         output=frappe.as_json(output),

@@ -94,10 +94,13 @@ frappe_graphql provides a couple of subscription utility functions. They can be 
 - `frappe_graphql.setup_subscription`
 - `frappe_graphql.get_consumers`
 - `frappe_graphql.notify_consumer`
+- `frappe_graphql.notify_consumers`
 - `frappe_graphql.notify_all_consumers`
 - `frappe_graphql.complete_subscription`
 
 Please go through the following examples to get better idea on when to use them
+
+<hr/>
 
 ### Example: Doc Events
 Let's make a subscription, `doc_events` which will receive doctype on_change events.
@@ -193,6 +196,8 @@ def notify_consumers(doctype, name, triggered_by):
 
 </details>
 
+<hr/>
+
 ### Example: User Login
 
 Another example subscription that gets triggered whenever a User logs in.
@@ -250,4 +255,124 @@ def on_login(login_manager):
         ))
 ```
 
+</details>
+
+<hr/>
+
+### Example Client Code
+<details><summary>Javascript Client Code</summary>
+
+Please install:  
+- socket.io-client (2.x)  
+- axios  
+- tough-cookie
+```js
+const axios = require("axios").default;
+const io = require("socket.io-client");
+const toughCookie = require("tough-cookie");
+
+
+const authCookies = [];
+const TEST_SITE = "http://test_site:8000"
+const SOCKETIO_IO_URL = "http://test_site:9000"
+const USER = "administrator";
+const PWD = "admin"
+
+async function main() {
+  await authenticate()
+  await validateAuth()
+
+  const socketio_client = await getSocketIOClient();
+  await subscribeToDocEvents(socketio_client)
+}
+
+async function authenticate() {
+  await axios.post(`${TEST_SITE}/api/method/login`, null, {
+    params: {
+      usr: USER,
+      pwd: PWD
+    }
+  }).then(r => {
+    if (r.status !== 200) {
+      throw new Exception()
+    }
+    authCookies.push(...r.headers["set-cookie"].map(toughCookie.Cookie.parse))
+  }).catch(r =>
+    console.error("Auth Error", r)
+  )
+}
+
+async function validateAuth() {
+  await axios.post(`${TEST_SITE}/api/method/frappe.auth.get_logged_user`, null, {
+    headers: {
+      ...getAuthCookieHeader()
+    }
+  })
+    .then(r => console.log("Auth Verified:", r.data.user))
+    .catch(r => console.error("Auth Verification Error", r))
+}
+
+async function getSocketIOClient() {
+  const socket = io(SOCKETIO_IO_URL, {
+    extraHeaders: {
+      "Origin": TEST_SITE,
+      ...getAuthCookieHeader()
+    }
+  });
+  socket.on("message", d => console.log("SocketIO Message:", d));
+
+  // Make sure you get these messages.
+  // socket.on("list_update", d => console.log("list_update", d));
+
+  while (!socket.connected) {
+    console.log("Connecting to SocketIO..")
+    await asyncSleep(2000);
+  }
+  await asyncSleep(2000);
+  return socket;
+}
+
+async function subscribeToDocEvents(socketio_client) {
+  const query = `
+  subscription {
+    doc_events(doctypes: ["User", "ToDo"]) {
+      subscription_id
+      doctype
+      name
+      document {
+          ... on User {
+              email
+              full_name
+          }
+      }
+    }
+  }
+  `
+  const sub_id = await axios.post(`${TEST_SITE}/api/method/graphql`, { query }, {
+    headers: {
+      ...getAuthCookieHeader()
+    }
+  }).then(r => {
+    return r.data.data.doc_events.subscription_id;
+  })
+  console.log("DocEvents SubID:", sub_id)
+
+  socketio_client.emit("task_subscribe", [sub_id])
+  socketio_client.on("doc_events", d => console.log("doc_events", d))
+}
+
+function getAuthCookieHeader() {
+  return {
+    cookie: authCookies.map(x => x.cookieString()).join("; ")
+  }
+}
+
+function asyncSleep(millis) {
+  return new Promise(res => {
+    setTimeout(res, millis);
+  })
+}
+
+main()
+```
 </details>

@@ -55,7 +55,12 @@ def default_field_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
 
     if should_resolve_from_doc:
         # this section is executed for Fields on DocType object types.
-        return document_resolver(
+        hooks_cmd = frappe.get_hooks("gql_default_document_resolver")
+        resolver = document_resolver
+        if len(hooks_cmd):
+            resolver = frappe.get_attr(hooks_cmd[-1])
+
+        return resolver(
             obj=obj,
             info=info,
             **kwargs

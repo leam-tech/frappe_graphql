@@ -41,8 +41,16 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     def _get_value(fieldname):
         # Preference to fetch from obj first, cached_doc later
         if obj.get(fieldname) is not None:
-            return obj.get(fieldname)
-        return cached_doc.get(fieldname)
+            value = obj.get(fieldname)
+        else:
+            value = cached_doc.get(fieldname)
+
+        # ignore_doc_resolver_translation might be helpful for overriding document_resolver
+        # which might be a simple wrapper around this function (document_resolver)
+        if isinstance(value, str) and not frappe.flags.ignore_doc_resolver_translation:
+            return frappe._(value)
+
+        return value
 
     if info.field_name.endswith("__name"):
         fieldname = info.field_name.split("__name")[0]
