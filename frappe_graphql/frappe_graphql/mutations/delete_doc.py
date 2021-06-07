@@ -12,8 +12,8 @@ def delete_doc_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     name = kwargs.get("name")
     doc = frappe.get_doc(doctype, name)
     doc.delete()
-    return {
+    return frappe._dict({
         "doctype": doctype,
         "name": name,
         "success": True
-    }
+    })
