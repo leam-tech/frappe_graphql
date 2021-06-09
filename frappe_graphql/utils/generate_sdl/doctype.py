@@ -120,9 +120,13 @@ def get_query_type_extension(meta: Meta):
     if meta.issingle:
         sdl += f"\n  {dt}: {dt}!"
     else:
-        sdl += f"\n  {dt}(name: String!): {dt}!"
+        plural = get_plural(meta.name)
+        if plural == meta.name:
+            sdl += f"\n  A{dt}(name: String!): {dt}!"
+        else:
+            sdl += f"\n  {dt}(name: String!): {dt}!"
 
-        plural_dt = get_plural(meta.name)
+        plural_dt = format_doctype(plural)
         sdl += f"\n  {plural_dt}(filter: [DBFilterInput], sortBy: {dt}SortingInput, "
         sdl += "before: String, after: String, "
         sdl += f"first: Int, last: Int): {dt}CountableConnection!"
@@ -174,8 +178,7 @@ def get_graphql_type(docfield):
 
 def get_plural(doctype):
     p = inflect.engine()
-    pl = p.plural(doctype)
-    return format_doctype(pl)
+    return p.plural(doctype)
 
 
 def format_doctype(doctype):
