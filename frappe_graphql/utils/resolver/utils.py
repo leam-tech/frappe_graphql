@@ -16,7 +16,11 @@ def get_singular_doctype(name):
 
             # IF plural = singular, lets add a prefix: 'A'
             if p.plural(dt) == dt:
-                singular_map[f"A{dt.replace(' ', '')}"] = dt
+                prefix = "A"
+                if dt[0].lower() in ("a", "e", "i", "o", "u"):
+                    prefix = "An"
+
+                singular_map[f"{prefix}{dt.replace(' ', '')}"] = dt
             else:
                 singular_map[dt.replace(" ", "")] = dt
 

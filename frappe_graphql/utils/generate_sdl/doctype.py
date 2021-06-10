@@ -122,7 +122,11 @@ def get_query_type_extension(meta: Meta):
     else:
         plural = get_plural(meta.name)
         if plural == meta.name:
-            sdl += f"\n  A{dt}(name: String!): {dt}!"
+            prefix = "A"
+            if dt[0].lower() in ("a", "e", "i", "o", "u"):
+                prefix = "An"
+
+            sdl += f"\n  {prefix}{dt}(name: String!): {dt}!"
         else:
             sdl += f"\n  {dt}(name: String!): {dt}!"
 
