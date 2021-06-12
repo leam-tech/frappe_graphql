@@ -27,16 +27,17 @@ def bulk_delete_docs(doctype: str, docs: list):
     if len(docs) >= ENQUEUE_DOC_DELETION:
         queued = True
         frappe.enqueue(delete_bulk,
-                       doctype=doctype, items=docs)
+                       doctype=doctype, items=docs, get_query=get_query())
     else:
-        success_count, failure_count = delete_bulk(doctype, docs)
+        success_count, failure_count = delete_bulk(doctype, docs,
+                                                   get_query=get_query())
         success_count = success_count
         failure_count = failure_count
     return {"success": True if not failure_count else False, "queued": queued,
             "success_count": success_count, "failure_count": failure_count}
 
 
-def delete_bulk(doctype, items):
+def delete_bulk(doctype, items, get_query):
     success_count = 0
     failure_count = 0
     error_outputs = []
@@ -57,7 +58,7 @@ def delete_bulk(doctype, items):
             error_outputs.append(e)
     if len(error_outputs):
         for error_output in error_outputs:
-            query, variables, operation_name = get_query()
+            query, variables, operation_name = get_query
             log_bulk_delete_error(query, variables, operation_name,
                                   {
                                       "success": True if not failure_count else False,
