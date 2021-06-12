@@ -57,28 +57,22 @@ def delete_bulk(doctype, items, get_query):
             failure_count += 1
             error_outputs.append(e)
     if len(error_outputs):
-        for error_output in error_outputs:
-            query, variables, operation_name = get_query
-            log_bulk_delete_error(query, variables, operation_name,
-                                  {
-                                      "success": True if not failure_count else False,
-                                      "queued": True if len(
-                                          items) >= ENQUEUE_DOC_DELETION else False,
-                                      "success_count": success_count,
-                                      "failure_count": failure_count
-                                  },
-                                  error_output)
+        query, variables, operation_name = get_query
+        log_bulk_delete_error(query, variables, operation_name,
+                              {
+                                  "success": True if not failure_count else False,
+                                  "queued": True if len(
+                                      items) >= ENQUEUE_DOC_DELETION else False,
+                                  "success_count": success_count,
+                                  "failure_count": failure_count
+                              },
+                              error_outputs)
     return success_count, failure_count
 
 
 def log_bulk_delete_error(query, variables, operation_name, graphql_output,
-                          exception_cls):
-    import traceback as tb
-    tracebacks = f"Http Status Code: {exception_cls.http_status_code}\n\n" + \
-                 f"{str(exception_cls)}\n\n" + \
-                 f"{''.join(tb.format_exception(exception_cls, exception_cls, exception_cls.__traceback__))}"
-    if frappe.conf.get("developer_mode"):
-        frappe.errprint(tracebacks)
+                          error_outputs):
+    tracebacks = get_bulk_delete_tracebacks(error_outputs)
     error_log = frappe.new_doc("GraphQL Error Log")
     error_log.update(frappe._dict(
         title="GraphQL API Error",
@@ -90,3 +84,19 @@ def log_bulk_delete_error(query, variables, operation_name, graphql_output,
         traceback=tracebacks
     ))
     error_log.insert(ignore_permissions=True)
+
+
+def get_bulk_delete_tracebacks(error_outputs):
+    import traceback as tb
+    tracebacks = [f"Total BulkDeleteErrors : {len(error_outputs)}"]
+    for idx, error_output in enumerate(error_outputs):
+        tracebacks.append(
+            f"BulkDeleteError #{idx}\n"
+            f"Http Status Code: {error_output.http_status_code}\n\n" + \
+            f"{str(error_output)}\n\n" + \
+            f"{''.join(tb.format_exception(error_output, error_output, error_output.__traceback__))}")
+    tracebacks = "\n==========================================\n".join(
+        tracebacks)
+    if frappe.conf.get("developer_mode"):
+        frappe.errprint(tracebacks)
+    return tracebacks
