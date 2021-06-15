@@ -25,11 +25,6 @@ def on_change(doc, method=None):
     if any([getattr(frappe.flags, f, None) for f in flags]):
         return
 
-    # Verify DocType type has beed defined in SDL
-    schema = get_schema()
-    if not schema.get_type(get_singular_doctype(doc.doctype)):
-        return
-
     subscription_ids = []
     for consumer in get_consumers("doc_events"):
         doctypes = consumer.variables.get("doctypes", [])
@@ -39,6 +34,11 @@ def on_change(doc, method=None):
         subscription_ids.append(consumer.subscription_id)
 
     if not len(subscription_ids):
+        return
+
+    # Verify DocType type has beed defined in SDL
+    schema = get_schema()
+    if not schema.get_type(get_singular_doctype(doc.doctype)):
         return
 
     frappe.enqueue(
