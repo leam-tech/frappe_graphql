@@ -20,11 +20,9 @@ def doc_events_resolver(obj, info: GraphQLResolveInfo, **kwargs):
 
 
 def on_change(doc, method=None):
-    if frappe.flags.in_migrate:
-        return
-    # Verify DocType type has beed defined in SDL
-    schema = get_schema()
-    if not schema.get_type(get_singular_doctype(doc.doctype)):
+    flags = ["in_migrate", "in_install", "in_patch",
+             "in_import", "in_setup_wizard", "in_uninstall"]
+    if any([getattr(frappe.flags, f, None) for f in flags]):
         return
 
     subscription_ids = []
@@ -34,6 +32,14 @@ def on_change(doc, method=None):
             continue
 
         subscription_ids.append(consumer.subscription_id)
+
+    if not len(subscription_ids):
+        return
+
+    # Verify DocType type has beed defined in SDL
+    schema = get_schema()
+    if not schema.get_type(get_singular_doctype(doc.doctype)):
+        return
 
     frappe.enqueue(
         notify_consumers,
