@@ -18,7 +18,7 @@ def check_permissions(doctype: str, docname: str = None, ptypes=None):
         for ptype in ptypes:
             frappe.has_permission(doctype, ptype, doc, throw=True)
             if docname:
-                if role_permissions.get("if_owner", {}).get("read"):
+                if role_permissions.get("if_owner", {}).get(ptype):
                     if frappe.get_cached_value(doctype, docname, 'owner'
                                                ) != frappe.session.user:
                         frappe.throw(
