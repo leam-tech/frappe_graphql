@@ -37,6 +37,7 @@ graphql_schema_processors = [
 
     # Subscriptions
     "frappe_graphql.frappe_graphql.subscription.doc_events.bind",
+    "frappe_graphql.frappe_graphql.subscription.bulk_delete_docs_progress.bind"
 ]
 
 doc_events = {

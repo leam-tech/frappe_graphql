@@ -1,9 +1,12 @@
+from frappe.utils import flt
 from graphql import GraphQLSchema, GraphQLResolveInfo
 import frappe
 from frappe_graphql.utils.delete_doc import delete_doc
 from frappe import _
 from frappe_graphql.api import get_max_http_status_code, get_query
 from frappe_graphql.utils.http import get_operation_name, get_masked_variables
+from frappe_graphql.frappe_graphql.subscription.bulk_delete_docs_progress import \
+    notify_bulk_delete_docs_progress
 
 
 def bind(schema: GraphQLSchema):
@@ -44,17 +47,13 @@ def delete_bulk(doctype, items, get_query):
     for i, d in enumerate(items):
         try:
             delete_doc(doctype, d)
-            if len(items) >= 5:
-                frappe.publish_realtime("progress",
-                                        dict(progress=[i + 1, len(items)],
-                                             title=_('Deleting {0}').format(
-                                                 doctype), description=d),
-                                        user=frappe.session.user)
             frappe.db.commit()
             success_count += 1
+            send_bulk_delete_progress(doctype, d, True, success_count, failure_count, len(items))
         except Exception as e:
             frappe.db.rollback()
             failure_count += 1
+            send_bulk_delete_progress(doctype, d, False, success_count, failure_count, len(items))
             error_outputs.append(e)
     if len(error_outputs):
         query, variables, operation_name = get_query
@@ -100,3 +99,13 @@ def get_bulk_delete_tracebacks(error_outputs):
     if frappe.conf.get("developer_mode"):
         frappe.errprint(tracebacks)
     return tracebacks
+
+
+def send_bulk_delete_progress(doctype: str, docname: str, success: bool, success_count: int,
+                              failure_count: int, total_count: int):
+    data = frappe._dict(doctype=doctype, docname=docname, success=success,
+                        success_count=success_count, failure_count=failure_count,
+                        total_count=total_count,
+                        progress=flt((success_count + failure_count) / total_count * 100,
+                                     precision=2))
+    notify_bulk_delete_docs_progress(data)

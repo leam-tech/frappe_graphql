@@ -62,6 +62,17 @@ type BulkDeleteDocs {
     failure_count: Int!
 }
 
+type BulkDeleteDocsProgress implements BaseSubscription{
+    subscription_id: String!
+    doctype: ID!
+    docname: ID!
+    success: Boolean!
+    success_count: Int!
+    failure_count: Int!
+    total_count: Int!
+    progress: Float!
+}
+
 type Mutation {
 
     # Basic Document Mutations
@@ -72,7 +83,7 @@ type Mutation {
 
     uploadFile(file: Upload!, is_private: Boolean, attached_to_doctype: String,
         attached_to_name: String, fieldname: String): File
-    
+
     # Subscription KeepAlive
     subscriptionKeepAlive(subscription: String!, subscription_id: String!): SubscriptionInfo!
 }
@@ -83,6 +94,7 @@ type Query {
 
 type Subscription {
   doc_events(doctypes: [String!]): DocEvent
+  bulkDeleteDocsProgress(doctype: ID!): BulkDeleteDocsProgress!
 }
 
 enum DBFilterOperator {
