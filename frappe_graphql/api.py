@@ -22,6 +22,12 @@ def execute_gql_query():
         frappe.db.rollback()
         log_error(query, variables, operation_name, output)
         frappe.local.response["http_status_code"] = get_max_http_status_code(output.get("errors"))
+        errors = []
+        for err in output.errors:
+            if isinstance(err, GraphQLError):
+                err = err.formatted
+            errors.append(err)
+        output.errors = errors
 
 
 def get_query():
