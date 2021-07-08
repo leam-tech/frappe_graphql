@@ -106,6 +106,7 @@ def log_error(query, variables, operation_name, output):
             continue
         tracebacks.append(
             f"GQLError #{idx}\n"
+            + f"Http Status Code: {exc.http_status_code}\n"
             + f"{str(err)}\n\n"
             + f"{''.join(tb.format_exception(exc, exc, exc.__traceback__))}"
         )
