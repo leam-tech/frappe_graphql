@@ -53,6 +53,7 @@ class CursorPaginator(object):
         if self.last:
             # to get LAST, we swap the sort order
             # data will be reversed after fetch
+            # We will flip hasNextPage & hasPreviousPage too
             self.sort_dir = "desc" if self.sort_dir == "asc" else "asc"
 
         self.cursor = self.after or self.before
@@ -74,7 +75,12 @@ class CursorPaginator(object):
         if matched_count > requested_count:
             self.has_next_page = True
             data.pop()
+
+        # Flip! (last cursor is being used)
         if self.sort_dir != self.original_sort_dir:
+            _swap_has_page = self.has_next_page
+            self.has_next_page = self.has_previous_page
+            self.has_previous_page = _swap_has_page
             data = reversed(data)
 
         edges = [frappe._dict(
