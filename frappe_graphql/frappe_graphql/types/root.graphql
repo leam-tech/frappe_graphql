@@ -55,6 +55,19 @@ type DELETE_DOC_TYPE {
     success: Boolean!
 }
 
+type UploadFile {
+    name: String
+    file_url: String
+    file_name: String
+    file_size: Int
+    is_private: Int
+    folder: String
+    content_hash: String
+    attached_to_doctype: String
+    attached_to_name: String
+    attached_to_field: String
+}
+
 type Mutation {
 
     # Basic Document Mutations
@@ -63,7 +76,7 @@ type Mutation {
     deleteDoc(doctype: String!, name: String!): DELETE_DOC_TYPE
 
     uploadFile(file: Upload!, is_private: Boolean, attached_to_doctype: String,
-        attached_to_name: String, fieldname: String): File
+        attached_to_name: String, fieldname: String): UploadFile!
     
     # Subscription KeepAlive
     subscriptionKeepAlive(subscription: String!, subscription_id: String!): SubscriptionInfo!
