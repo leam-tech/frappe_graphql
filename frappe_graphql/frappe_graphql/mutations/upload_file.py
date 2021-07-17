@@ -1,4 +1,3 @@
-import frappe
 from graphql import GraphQLSchema, GraphQLResolveInfo
 
 
@@ -17,16 +16,4 @@ def file_upload_resolver(obj, info: GraphQLResolveInfo, **kwargs):
         fieldname=kwargs.get("fieldname"),
     )
 
-    # Access to file-document is restricted to System Manager by default
-    return frappe._dict(
-        name=file_doc.get("name"),
-        file_url=file_doc.get("file_url"),
-        file_name=file_doc.get("file_name"),
-        file_size=file_doc.get("file_size"),
-        is_private=file_doc.get("is_private"),
-        folder=file_doc.get("folder"),
-        content_hash=file_doc.get("content_hash"),
-        attached_to_doctype=file_doc.get("attached_to_doctype"),
-        attached_to_name=file_doc.get("attached_to_name"),
-        attached_to_field=file_doc.get("attached_to_field"),
-    )
+    return file_doc
