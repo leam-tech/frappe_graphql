@@ -13,6 +13,7 @@ class CursorPaginator(object):
             count_resolver=None,
             node_resolver=None,
             default_sorting_fields=None,
+            default_sorting_direction=None,
             extra_args=None):
 
         if (not count_resolver) != (not node_resolver):
@@ -25,6 +26,7 @@ class CursorPaginator(object):
         self.custom_count_resolver = count_resolver
         self.custom_node_resolver = node_resolver
         self.default_sorting_fields = default_sorting_fields
+        self.default_sorting_direction = default_sorting_direction
 
         # Extra Args are helpful for custom resolvers
         self.extra_args = extra_args
@@ -147,7 +149,8 @@ class CursorPaginator(object):
         )
 
     def get_sort_args(self, sorting_input=None):
-        sort_dir = "desc"
+        sort_dir = self.default_sorting_direction if self.default_sorting_direction in (
+        "asc", "desc") else "desc"
         if not self.default_sorting_fields:
             meta = frappe.get_meta(self.doctype)
             if meta.istable:
