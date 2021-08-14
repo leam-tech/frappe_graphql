@@ -3,16 +3,17 @@ from frappe.utils import cint
 from frappe.handler import ALLOWED_MIMETYPES
 
 
-def make_file_document(file_key, doctype=None, docname=None, fieldname=None, is_private=None):
+def make_file_document(
+        file_key, doctype=None, docname=None, fieldname=None, is_private=None,
+        ignore_permissions=False):
     user = None
-    if frappe.session.user == 'Guest':
+    if not ignore_permissions and frappe.session.user == 'Guest':
         if frappe.get_system_settings('allow_guests_to_upload_files'):
             ignore_permissions = True
         else:
             raise frappe.PermissionError("Guest uploads are not allowed")
     else:
         user = frappe.get_doc("User", frappe.session.user)
-        ignore_permissions = False
 
     files = frappe.request.files
     content = None
