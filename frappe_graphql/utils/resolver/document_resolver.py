@@ -1,4 +1,4 @@
-from graphql import GraphQLResolveInfo
+from graphql import GraphQLResolveInfo, GraphQLEnumType
 
 import frappe
 from frappe.model import default_fields
@@ -38,7 +38,7 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
         if info.field_name in default_fields:
             df = get_default_field_df(info.field_name)
 
-    def _get_value(fieldname):
+    def _get_value(fieldname, ignore_translation=False):
         # Preference to fetch from obj first, cached_doc later
         if obj.get(fieldname) is not None:
             value = obj.get(fieldname)
@@ -47,7 +47,7 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
 
         # ignore_doc_resolver_translation might be helpful for overriding document_resolver
         # which might be a simple wrapper around this function (document_resolver)
-        if isinstance(value, str) and not frappe.flags.ignore_doc_resolver_translation:
+        if not ignore_translation and isinstance(value, str) and not frappe.flags.ignore_doc_resolver_translation:
             return frappe._(value)
 
         return value
@@ -62,8 +62,9 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
             link_dt = df.options if df.fieldtype == "Link" else \
                 _get_value(df.options)
             return frappe._dict(name=_get_value(df.fieldname), doctype=link_dt)
-        elif df.fieldtype == "Select":
-            value = _get_value(df.fieldname) or ""
+        elif df.fieldtype == "Select" and isinstance(info.return_type, GraphQLEnumType):
+            # We allow Select fields whose returnType is just Strings
+            value = _get_value(df.fieldname, ignore_translation=True) or ""
             return frappe.scrub(value).upper()
 
     return _get_value(info.field_name)
