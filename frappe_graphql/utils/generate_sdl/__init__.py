@@ -24,7 +24,7 @@ SDL_PREDEFINED_DOCTYPES = [
 
 
 def make_doctype_sdl_files(target_dir, app=None, modules=[], doctypes=[],
-                           ignore_custom_fields=False):
+                           ignore_custom_fields=False, disable_enum_selectdf=False):
     specific_doctypes = doctypes or []
     doctypes = get_doctypes(
         app=app,
@@ -32,11 +32,17 @@ def make_doctype_sdl_files(target_dir, app=None, modules=[], doctypes=[],
         doctypes=doctypes
     )
 
+    options = frappe._dict(
+        disable_enum_selectdf=disable_enum_selectdf,
+        ignore_custom_fields=ignore_custom_fields
+    )
+
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
 
     def write_file(filename, contents):
-        target_file = os.path.join(target_dir, f"{frappe.scrub(filename)}.graphql")
+        target_file = os.path.join(
+            target_dir, f"{frappe.scrub(filename)}.graphql")
         with open(target_file, "w") as f:
             f.write(contents)
 
@@ -44,7 +50,7 @@ def make_doctype_sdl_files(target_dir, app=None, modules=[], doctypes=[],
         if doctype not in specific_doctypes and \
                 (doctype in IGNORED_DOCTYPES or doctype in SDL_PREDEFINED_DOCTYPES):
             continue
-        sdl = get_doctype_sdl(doctype, ignore_custom_fields)
+        sdl = get_doctype_sdl(doctype=doctype, options=options)
         write_file(doctype, sdl)
 
 

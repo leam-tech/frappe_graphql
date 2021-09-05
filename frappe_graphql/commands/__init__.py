@@ -19,10 +19,12 @@ def graphql():
               help="Doctype to generate sdls for. You can specify multiple")
 @click.option("--ignore-custom-fields", is_flag=True, default=False,
               help="Ignore custom fields generation")
+@click.option("--disable-enum-select-fields", is_flag=True, default=False,
+              help="Disable generating GQLEnums for Frappe Select DocFields")
 @pass_context
 def generate_sdl(
     context, output_dir=None, app=None, module=None, doctype=None,
-    ignore_custom_fields=False
+    ignore_custom_fields=False, disable_enum_select_fields=False
 ):
     site = get_site(context=context)
     try:
@@ -31,7 +33,8 @@ def generate_sdl(
         target_dir = frappe.get_site_path("doctype_sdls")
         if output_dir:
             if not path.isabs(output_dir):
-                target_dir = path.abspath(path.join(getcwd(), "../apps", output_dir))
+                target_dir = path.abspath(
+                    path.join(getcwd(), "../apps", output_dir))
             else:
                 target_dir = output_dir
         target_dir = path.abspath(target_dir)
@@ -41,7 +44,8 @@ def generate_sdl(
             app=app,
             modules=list(module),
             doctypes=list(doctype),
-            ignore_custom_fields=ignore_custom_fields
+            ignore_custom_fields=ignore_custom_fields,
+            disable_enum_selectdf=disable_enum_select_fields
         )
     finally:
         frappe.destroy()
