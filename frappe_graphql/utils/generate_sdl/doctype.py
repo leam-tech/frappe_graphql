@@ -9,7 +9,7 @@ from frappe.model.meta import Meta
 def get_doctype_sdl(doctype, options):
     """
     options = dict(
-        disable_enum_selectdf=False,
+        disable_enum_select_fields=False,
         ignore_custom_fields=False
     )
     """
@@ -20,7 +20,7 @@ def get_doctype_sdl(doctype, options):
     if not options.ignore_custom_fields and len(meta.get_custom_fields()):
         sdl += get_custom_field_sdl(meta, defined_fieldnames)
 
-    if not options.disable_enum_selectdf:
+    if not options.disable_enum_select_fields:
         sdl += get_select_docfield_enums(meta=meta, options=options)
 
     # DocTypeSortingInput
@@ -183,7 +183,7 @@ def get_graphql_type(meta, docfield, options: dict):
     int_fieldtypes = ["Int", "Long Int", "Check"]
     float_fieldtypes = ["Currency", "Float", "Percent"]
 
-    if options.disable_enum_selectdf:
+    if options.disable_enum_select_fields:
         string_fieldtypes.append("Select")
 
     graphql_type = None

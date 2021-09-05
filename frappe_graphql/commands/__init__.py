@@ -45,7 +45,7 @@ def generate_sdl(
             modules=list(module),
             doctypes=list(doctype),
             ignore_custom_fields=ignore_custom_fields,
-            disable_enum_selectdf=disable_enum_select_fields
+            disable_enum_select_fields=disable_enum_select_fields
         )
     finally:
         frappe.destroy()
