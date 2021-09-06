@@ -174,8 +174,10 @@ def generate_resolvers(context, app=None, module=None, doctype=None, only_folder
         #     print(valid_path)
 
         extension_file_paths = []
-        # If doctypes given, only check for those doctypes; otherwise include all files ending in _extension.graphql
-        if len(given_doctypes) != 0:
+        # If doctypes given, only check for those doctypes; 
+        # if --only-folder is true, skip all checks
+        # otherwise include all files ending in _extension.graphql
+        if len(given_doctypes) != 0 and not only_folders:
 
             '''DEBUG PRINT'''
             # print("Got doctype option(s):", given_doctypes)
