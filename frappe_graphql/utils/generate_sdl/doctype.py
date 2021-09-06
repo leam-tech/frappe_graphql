@@ -18,7 +18,7 @@ def get_doctype_sdl(doctype, options):
 
     # Extend Doctype with Custom Fields
     if not options.ignore_custom_fields and len(meta.get_custom_fields()):
-        sdl += get_custom_field_sdl(meta, defined_fieldnames)
+        sdl += get_custom_field_sdl(meta, defined_fieldnames, options=options)
 
     if not options.disable_enum_select_fields:
         sdl += get_select_docfield_enums(meta=meta, options=options)
@@ -71,7 +71,7 @@ def get_basic_doctype_sdl(meta: Meta, options: dict):
     return sdl, defined_fieldnames
 
 
-def get_custom_field_sdl(meta, defined_fieldnames):
+def get_custom_field_sdl(meta, defined_fieldnames, options):
     sdl = f"\n\nextend type {format_doctype(meta.name)} {{"
     for field in meta.get_custom_fields():
         if field.fieldtype in display_fieldtypes:
@@ -79,7 +79,7 @@ def get_custom_field_sdl(meta, defined_fieldnames):
         if field.fieldname in defined_fieldnames:
             continue
         defined_fieldnames.append(field.fieldname)
-        sdl += f"\n  {get_field_sdl(meta, field)}"
+        sdl += f"\n  {get_field_sdl(meta, field, options=options)}"
         if field.fieldtype in ("Link", "Dynamic Link"):
             sdl += f"\n  {get_link_field_name_sdl(field)}"
     sdl += "\n}"
