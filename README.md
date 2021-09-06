@@ -226,6 +226,8 @@ $ bench --site test_site graphql generate_sdl --output-dir <your-app/graphql> --
 # Generate sdls for doctype <d1> <2>
 $ bench --site test_site graphql generate_sdl --output-dir <your-app/graphql> --doctype <d1> -dt <d2> -dt <name>
 
+# Generate sdls for all doctypes in <your-app> without Enums for Select Fields
+$ bench --site test_site graphql generate_sdl --output-dir <your-app/graphql> --app <your-app> --disable-enum-select-fields
 ```
 - Specify this directory in `graphql_sdl_dir` hook and you are done.
 ### Introducing a Custom Field to GraphQL
