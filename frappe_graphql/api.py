@@ -113,9 +113,11 @@ def log_error(query, variables, operation_name, output):
 
     tracebacks.append(f"Frappe Traceback: \n{frappe.get_traceback()}")
     if frappe.conf.get("developer_mode"):
-        frappe.errprint(tracebacks)
+       frappe.errprint(tracebacks)
 
     tracebacks = "\n==========================================\n".join(tracebacks)
+    if frappe.conf.get("developer_mode"):
+        print(tracebacks)
     error_log = frappe.new_doc("GraphQL Error Log")
     error_log.update(frappe._dict(
         title="GraphQL API Error",
