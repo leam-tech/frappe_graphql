@@ -1,6 +1,7 @@
-import frappe
-from frappe_graphql import subscription_keepalive
 from graphql import GraphQLSchema, GraphQLResolveInfo
+
+import frappe
+from frappe_graphql.utils.subscriptions import subscription_keepalive
 
 
 def bind(schema: GraphQLSchema):

@@ -6,13 +6,13 @@ type DocType implements BaseDocType {
   modified: String
   modified_by: User!
   parent: BaseDocType
-  parent__name: String
   parentfield: String
   parenttype: String
   idx: Int
   docstatus: Int
   owner__name: String!
   modified_by__name: String!
+  parent__name: String
   module: ModuleDef!
   module__name: String
   is_submittable: Int
@@ -28,7 +28,7 @@ type DocType implements BaseDocType {
   beta: Int
   fields: [DocField!]!
   autoname: String
-  name_case: String
+  name_case: DocTypeNameCaseSelectOptions
   description: String
   documentation: String
   image_field: String
@@ -45,8 +45,8 @@ type DocType implements BaseDocType {
   search_fields: String
   default_print_format: String
   sort_field: String
-  sort_order: String
-  document_type: String
+  sort_order: DocTypeDefaultSortOrderSelectOptions
+  document_type: DocTypeShowInModuleSectionSelectOptions
   icon: String
   color: String
   show_preview_popup: Int
@@ -66,7 +66,29 @@ type DocType implements BaseDocType {
   index_web_pages_for_search: Int
   route: String
   is_published_field: String
-  engine: String
+  engine: DocTypeDatabaseEngineSelectOptions
+}
+
+enum DocTypeNameCaseSelectOptions {
+  TITLE_CASE
+  UPPER_CASE
+}
+
+enum DocTypeDefaultSortOrderSelectOptions {
+  ASC
+  DESC
+}
+
+enum DocTypeShowInModuleSectionSelectOptions {
+  DOCUMENT
+  SETUP
+  SYSTEM
+  OTHER
+}
+
+enum DocTypeDatabaseEngineSelectOptions {
+  INNODB
+  MYISAM
 }
 
 enum DocTypeSortField {
