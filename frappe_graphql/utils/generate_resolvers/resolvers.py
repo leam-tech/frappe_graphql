@@ -41,8 +41,8 @@ def scan_extension_for_functions(path):
             in_mutation_block = True
 
     '''DEBUG PRINT'''
-    # print("Queries found: ", query_names)
-    # print("Mutation found: ", mutation_names)
+    #print("Queries found: ", query_names)
+    #print("Mutation found: ", mutation_names)
 
     return query_names, mutation_names
 
@@ -57,28 +57,42 @@ def generate_schema_content(queries, mutations, root_name, doc_name):
 
     binding = '    schema.{{type}}_type.fields["{{field}}"].resolve = \\\n      {{doc_name}}_resolver.{{field_slug}}_resolver'
 
-    contents += frappe.render_template(header,
-                                       frappe._dict(root_name=root_name, doc_name=doc_name))
+    contents += frappe.render_template(
+        header,
+        frappe._dict(root_name=root_name, doc_name=doc_name)
+    )
     contents += "\n\n\n"
 
     if queries != []:
-        contents += frappe.render_template(binding_header,
-                                           frappe._dict(doc_name=doc_name, type="queries"))
+        contents += frappe.render_template(
+            binding_header,
+            frappe._dict(doc_name=doc_name, type="queries")
+        )
         contents += "\n\n"
         for query in queries:
             contents += frappe.render_template(binding, frappe._dict(
-                type="query", field=query, doc_name=doc_name, field_slug=sluggify_camelCase(query)))
+                type="query",
+                field=query,
+                doc_name=doc_name,
+                field_slug=camelCase_to_snake_case(query)
+            ))
             contents += "\n\n"
 
     if mutations != []:
         contents += "\n"
-        contents += frappe.render_template(binding_header,
-                                           frappe._dict(doc_name=doc_name, type="mutations"))
+        contents += frappe.render_template(
+            binding_header,
+            frappe._dict(doc_name=doc_name, type="mutations")
+        )
         contents += "\n\n"
 
         for mutation in mutations:
             contents += frappe.render_template(binding, frappe._dict(
-                type="mutation", field=mutation, doc_name=doc_name, field_slug=sluggify_camelCase(mutation)))
+                type="mutation",
+                field=mutation,
+                doc_name=doc_name,
+                field_slug=camelCase_to_snake_case(mutation)
+            ))
             contents += "\n\n"
 
     return contents
@@ -92,21 +106,19 @@ def generate_functions(function_names, output_path):
     init_contents = ''
     init_path = os.path.join(output_path, "__init__")
 
-    # for ever query/mutation:
+    # for every query/mutation:
     for function_name in function_names:
-        name = sluggify_camelCase(function_name)
+        name = camelCase_to_snake_case(function_name)
         file_path = os.path.join(output_path, name)
 
         file_contents = header
-        file_contents += frappe.render_template(
-            function, frappe._dict(field=name))
+        file_contents += frappe.render_template(function, frappe._dict(field=name))
         file = open(f'{file_path}.py', 'w')
         file.write(file_contents)
         file.close()
 
         # Make an entry in the contents of the init.py
-        init_contents += frappe.render_template(
-            init_entry, frappe._dict(function_file=name))
+        init_contents += frappe.render_template(init_entry, frappe._dict(function_file=name))
 
     # Make the init.py file
     file = open(f'{init_path}.py', 'w')
@@ -118,12 +130,12 @@ def edit_hooks_file(root_path, doc_name, binding_types):
     '''
     Will append the binding to hooks.py
 
-    If bindings already exists, no changes will be made. 
+    If bindings already exists, no changes will be made.
     Returns True if changes were made, False otherwise.
     '''
 
     '''DEBUG PRINT'''
-    # print(binding_types)
+    #print(binding_types)
 
     schema_binding_line = "    \"{{root_name}}.graphql.{{doctype_name}}.schema.bind_{{doctype_name}}_{{binding_type}}\",\n\n"
 
@@ -136,8 +148,14 @@ def edit_hooks_file(root_path, doc_name, binding_types):
 
         lines_to_generate = []
         for binding_type in binding_types:
-            lines_to_generate.append(frappe.render_template(schema_binding_line, frappe._dict(
-                root_name=root_name, doctype_name=doc_name, binding_type=binding_type)))
+            lines_to_generate.append(frappe.render_template(
+                schema_binding_line,
+                frappe._dict(
+                    root_name=root_name,
+                    doctype_name=doc_name,
+                    binding_type=binding_type
+                )
+            ))
 
         in_schema_block = False
         written_lines = 0
@@ -183,5 +201,5 @@ def edit_hooks_file(root_path, doc_name, binding_types):
         print(e)
 
 
-def sluggify_camelCase(string):
+def camelCase_to_snake_case(string):
     return re.sub(r'(?<!^)(?=[A-Z])', '_', string).lower()

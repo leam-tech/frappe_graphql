@@ -57,9 +57,10 @@ def generate_sdl(
 graphql.add_command(generate_sdl)
 
 
-# TODO: Option to generate folder strcutres for a manually typed, custom doctype (even if _extension doesn't exist)
-# TODO: Option to add controller dirs based on queries and mutations; can start by adding them as comments
-# TODO: Consider skipping an _extension file if it doesn't have queries/mutations in it
+# Need to come up with a template system. A config file maybe? Or maybe just variables defined in the hooks.py file
+# Either way, need to argument-ize some of these variables and expose them.
+# Need to figure out which ones; how can generating resolvers be customized?
+
 @click.command("generate_resolvers")
 @click.option("--app", "-ap", help="All _extensions in the app will have bindings generated.")
 @click.option("--module", "-m", multiple=True, help="All _extensions in the modules(s) will have bindings generated.")
@@ -110,8 +111,7 @@ def generate_resolvers(context, app=None, module=None, doctype=None, only_folder
         # If app option was given
         if given_app:
             if given_app not in site_apps:
-                print(
-                    f'No app named {given_app} installed on this site. Exiting...')
+                print(f'No app named {given_app} installed on this site. Exiting...')
                 exit()
             selected_apps = [given_app]
         else:
@@ -133,25 +133,22 @@ def generate_resolvers(context, app=None, module=None, doctype=None, only_folder
 
                         if frappe.scrub(given_module) == selected_app:
                             # If module name is same as app, use the app root folder (because of convention)
-                            module_paths.append(
-                                path.join(frappe.get_app_path(selected_app)))
+                            module_paths.append(path.join(frappe.get_app_path(selected_app)))
                         else:
-                            module_paths.append(
-                                frappe.get_module_path(given_module))
+                            module_paths.append(frappe.get_module_path(given_module))
 
                 if len(module_paths) == number_of_module_paths:
-                    print(
-                        f'No module named {given_module} found in any apps. Exiting...')
+                    print(f'No module named {given_module} found in any apps. Exiting...')
                     exit()
         else:
             for selected_app in selected_apps:
+
                 app_modules = frappe.get_module_list(selected_app)
                 for app_module in app_modules:
 
                     if frappe.scrub(app_module) == selected_app:
                         # If module name is same as app, use the app root folder (because of convention)
-                        module_paths.append(
-                            path.join(frappe.get_app_path(selected_app)))
+                        module_paths.append(path.join(frappe.get_app_path(selected_app)))
                     else:
                         module_paths.append(frappe.get_module_path(app_module))
 
@@ -178,7 +175,7 @@ def generate_resolvers(context, app=None, module=None, doctype=None, only_folder
         #     print(valid_path)
 
         extension_file_paths = []
-        # If doctypes given, only check for those doctypes; 
+        # If doctypes given, only check for those doctypes;
         # if --only-folder is true, skip all checks
         # otherwise include all files ending in _extension.graphql
         if len(given_doctypes) != 0 and not only_folders:
@@ -198,21 +195,22 @@ def generate_resolvers(context, app=None, module=None, doctype=None, only_folder
             # 2. It's one of the given doctypes
             # 3. It has _extension in its name
             for valid_path in valid_paths:
-                extension_file_paths.extend([path.join(valid_path, name)
-                                             for name in listdir(valid_path)
-                                             if (isfile(join(valid_path, name))
-                                                 and (name in given_doctypes)
-                                                 and ("_extension" in name)
-                                                 )
-                                             ])
+                extension_file_paths.extend([
+                    path.join(valid_path, name)
+                    for name in listdir(valid_path)
+                    if (
+                        isfile(join(valid_path, name)) and
+                        (name in given_doctypes) and
+                        ("_extension" in name)
+                    )
+                ])
         else:
             for valid_path in valid_paths:
-                extension_file_paths.extend([path.join(valid_path, name)
-                                             for name in listdir(valid_path)
-                                             if (isfile(join(valid_path, name))
-                                                 and ("_extension" in name)
-                                                 )
-                                             ])
+                extension_file_paths.extend([
+                    path.join(valid_path, name)
+                    for name in listdir(valid_path)
+                    if (isfile(join(valid_path, name)) and ("_extension" in name))
+                ])
 
         '''DEBUG PRINT'''
         # print("All final files to operate on:")
