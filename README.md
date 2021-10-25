@@ -203,6 +203,12 @@ You can pass in a list of cmd that gets executed on schema creation. You are giv
 This is a good place to attach the resolvers for the custom SDLs defined via `graphql_sdl_dir`
 <hr/>
 
+## Support Extension of Middlewares via hooks
+```py
+# hooks.py
+graphql_middlewares = ["frappe_graphql.utils.middlewares.disable_introspection_queries.disable_introspection_queries"]
+```
+<hr>
 ## Introspection in Production
 Introspection is disabled by default in production mode. You can enable by setting the site config `enable_introspection_in_production: 1`.
 
