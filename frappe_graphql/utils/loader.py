@@ -8,20 +8,19 @@ from graphql.error import GraphQLSyntaxError
 
 from .exceptions import GraphQLFileSyntaxError
 
-
-graphql_schema = None
+graphql_schemas = {}
 
 
 def get_schema():
-    global graphql_schema
+    global graphql_schemas
 
-    if graphql_schema is not None:
-        return graphql_schema
+    if frappe.local.site in graphql_schemas:
+        return graphql_schemas.get(frappe.local.site)
 
     schema = graphql.build_schema(get_typedefs())
     execute_schema_processors(schema=schema)
 
-    graphql_schema = schema
+    graphql_schemas[frappe.local.site] = schema
     return schema
 
 
