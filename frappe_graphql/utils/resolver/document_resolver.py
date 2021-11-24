@@ -2,6 +2,7 @@ from graphql import GraphQLResolveInfo, GraphQLEnumType
 
 import frappe
 from frappe.model import default_fields
+from frappe.model.document import BaseDocument
 
 from .utils import get_singular_doctype
 
@@ -11,14 +12,22 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     if not doctype:
         return None
 
-    try:
-        # In the case when object signature lead into document resolver
-        # But the document no longer exists in database
-        cached_doc = frappe.get_cached_doc(doctype, obj.get("name"))
+    cached_doc = obj
+    if frappe.is_table(doctype=doctype) and isinstance(cached_doc, BaseDocument):
+        # Saves a lot of frappe.get_cached_doc calls
+        # - We do not want to check perms for child tables
+        # - We load child doc only if doc is not an instance of BaseDocument
+        pass
+    elif obj.get("__ignore_perms", 0) == 1:
+        pass
+    else:
+        try:
+            # Permission check after the document is confirmed to exist
+            # verbose check of is_owner of doc
+            # In the case when object signature lead into document resolver
+            # But the document no longer exists in database
+            cached_doc = frappe.get_cached_doc(doctype, obj.get("name"))
 
-        # Permission check after the document is confirmed to exist
-        # verbose check of is_owner of doc
-        if obj.get("__ignore_perms", 0) != 1:
             frappe.has_permission(doctype=doctype, doc=cached_doc, throw=True)
             role_permissions = frappe.permissions.get_role_permissions(doctype)
             if role_permissions.get("if_owner", {}).get("read"):
@@ -29,8 +38,8 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
             # apply field level read perms
             cached_doc.apply_fieldlevel_read_permissions()
 
-    except frappe.DoesNotExistError:
-        cached_doc = obj
+        except frappe.DoesNotExistError:
+            pass
 
     meta = frappe.get_meta(doctype)
 
@@ -48,7 +57,8 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
 
         # ignore_doc_resolver_translation might be helpful for overriding document_resolver
         # which might be a simple wrapper around this function (document_resolver)
-        if not ignore_translation and isinstance(value, str) and not frappe.flags.ignore_doc_resolver_translation:
+        if not ignore_translation and isinstance(
+                value, str) and not frappe.flags.ignore_doc_resolver_translation:
             return frappe._(value)
 
         return value
