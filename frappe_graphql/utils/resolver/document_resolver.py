@@ -1,6 +1,7 @@
 from graphql import GraphQLResolveInfo, GraphQLEnumType
 
 import frappe
+from frappe.utils import cint
 from frappe.model import default_fields
 from frappe.model.document import BaseDocument
 
@@ -13,12 +14,20 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
         return None
 
     cached_doc = obj
+    __ignore_perms = cint(obj.get("__ignore_perms", 0) == 1)
+
+    if not isinstance(cached_doc, BaseDocument) and info.field_name not in cached_doc:
+        try:
+            cached_doc = frappe.get_cached_doc(doctype, obj.get("name"))
+        except BaseException:
+            pass
+
     if frappe.is_table(doctype=doctype) and isinstance(cached_doc, BaseDocument):
         # Saves a lot of frappe.get_cached_doc calls
         # - We do not want to check perms for child tables
         # - We load child doc only if doc is not an instance of BaseDocument
         pass
-    elif obj.get("__ignore_perms", 0) == 1:
+    elif __ignore_perms:
         pass
     else:
         try:
@@ -26,7 +35,8 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
             # verbose check of is_owner of doc
             # In the case when object signature lead into document resolver
             # But the document no longer exists in database
-            cached_doc = frappe.get_cached_doc(doctype, obj.get("name"))
+            if not isinstance(cached_doc, BaseDocument):
+                cached_doc = frappe.get_cached_doc(doctype, obj.get("name"))
 
             frappe.has_permission(doctype=doctype, doc=cached_doc, throw=True)
             role_permissions = frappe.permissions.get_role_permissions(doctype)
@@ -61,18 +71,28 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
                 value, str) and not frappe.flags.ignore_doc_resolver_translation:
             return frappe._(value)
 
+        if __ignore_perms:
+            if isinstance(value, list):
+                for item in value:
+                    item.update({"__ignore_perms": __ignore_perms})
+            elif isinstance(value, (BaseDocument, dict)):
+                value.update({"__ignore_perms": __ignore_perms})
+
         return value
 
     if info.field_name.endswith("__name"):
         fieldname = info.field_name.split("__name")[0]
-        return _get_value(fieldname)
+        return _get_value(fieldname, ignore_translation=True)
     elif df:
         if df.fieldtype in ("Link", "Dynamic Link"):
             if not _get_value(df.fieldname):
                 return None
             link_dt = df.options if df.fieldtype == "Link" else \
-                _get_value(df.options)
-            return frappe._dict(name=_get_value(df.fieldname), doctype=link_dt)
+                _get_value(df.options, ignore_translation=True)
+            return frappe._dict(
+                name=_get_value(df.fieldname, ignore_translation=True),
+                doctype=link_dt,
+                __ignore_perms=__ignore_perms)
         elif df.fieldtype == "Select" and isinstance(info.return_type, GraphQLEnumType):
             # We allow Select fields whose returnType is just Strings
             value = _get_value(df.fieldname, ignore_translation=True) or ""
