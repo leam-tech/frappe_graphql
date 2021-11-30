@@ -2,6 +2,7 @@ import unittest
 import frappe
 
 from frappe_graphql.graphql import get_schema, execute
+from graphql.type.definition import GraphQLArgument, GraphQLField, GraphQLScalarType
 
 """
 The following aspects of Document Resolver is tested here:
@@ -249,31 +250,63 @@ class TestDocumentResolver(unittest.TestCase):
     """
     DB_DELETED_DOC_TESTS
     """
+
     def test_deleted_doc_resolution(self):
         d = frappe.get_doc(dict(
             doctype="User",
             first_name="Example A",
             email="example_a@test.com",
-            send_welcome_email=0
+            send_welcome_email=0,
+            roles=[{
+                "role": "System Manager"
+            }]
         )).insert()
 
         d.delete()
 
         # We cannot call Query.User(name: d.name) now since its deleted
+        schema = get_schema()
+        schema.type_map["UserDocInput"] = GraphQLScalarType(
+            name="UserDocInput"
+        )
+        schema.query_type.fields["EchoUser"] = GraphQLField(
+            type_=schema.type_map["User"],
+            args=dict(
+                user=GraphQLArgument(
+                    type_=schema.type_map["UserDocInput"]
+                )
+            ),
+            resolve=lambda obj, info, **kwargs: kwargs.get("user")
+        )
+
         r = execute(
             query="""
-            query FetchAdmin($user: String!) {
-                User(name: $user) {
+            query EchoUser($user: UserDocInput!) {
+                EchoUser(user: $user) {
+                    doctype
+                    name
+                    email
                     full_name
-                    desk_theme
+                    roles {
+                        role__name
+                    }
                 }
             }
             """,
             variables={
-                "user": d.name
+                "user": d
             }
         )
         print(r)
+        resolved_doc = frappe._dict(r.get("data").get("EchoUser"))
+
+        self.assertEqual(resolved_doc.doctype, d.doctype)
+        self.assertEqual(resolved_doc.name, d.name)
+        self.assertEqual(resolved_doc.email, d.email)
+        self.assertEqual(resolved_doc.full_name, d.full_name)
+        self.assertEqual(len(resolved_doc.roles), 1)
+        self.assertEqual(resolved_doc.roles[0].get("role__name"), "System Manager")
+
     """
     TRANSLATION_TESTS
     """
