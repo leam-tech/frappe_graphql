@@ -114,6 +114,14 @@ Result
 </details>
 <hr/>
 
+## Restrict Query/Mutation depth
+
+Query/Mutation is restricted by default to 10.
+
+You can change the depth limit by setting the site config `frappe_graphql_depth_limit: 15`.
+
+<hr/>
+
 ## Subscriptions
 Get notified instantly of the updates via existing frappe's SocketIO. Please read more on the implementation details [here](./docs/subscriptions.md)
 <hr/>
@@ -223,7 +231,8 @@ def is_introspection_disabled():
     return not cint(frappe.local.conf.get("developer_mode")) and \
         not cint(frappe.local.conf.get("enable_introspection_in_production"))
 ```
-<hr>
+<hr/>
+
 ## Introspection in Production
 Introspection is disabled by default in production mode. You can enable by setting the site config `enable_introspection_in_production: 1`.
 
