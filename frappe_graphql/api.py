@@ -18,7 +18,7 @@ def execute_gql_query():
         document_ast=parse(query),
         rules=(
             depth_limit_validator(
-                max_depth=cint(frappe.local.conf.get("frappe_graphql_depth_limit")) or 20
+                max_depth=cint(frappe.local.conf.get("frappe_graphql_depth_limit")) or 10
             ),
         )
     )
