@@ -23,8 +23,15 @@ SDL_PREDEFINED_DOCTYPES = [
 ]
 
 
-def make_doctype_sdl_files(target_dir, app=None, modules=[], doctypes=[],
-                           ignore_custom_fields=False, disable_enum_select_fields=False):
+def make_doctype_sdl_files(
+    target_dir,
+    app=None,
+    modules=[],
+    doctypes=[],
+    ignore_custom_fields=False,
+    disable_enum_select_fields=False,
+    include_default_childdoctype_queries=False,
+):
     specific_doctypes = doctypes or []
     doctypes = get_doctypes(
         app=app,
@@ -34,7 +41,8 @@ def make_doctype_sdl_files(target_dir, app=None, modules=[], doctypes=[],
 
     options = frappe._dict(
         disable_enum_select_fields=disable_enum_select_fields,
-        ignore_custom_fields=ignore_custom_fields
+        ignore_custom_fields=ignore_custom_fields,
+        include_default_childdoctype_queries=include_default_childdoctype_queries
     )
 
     if not os.path.exists(target_dir):

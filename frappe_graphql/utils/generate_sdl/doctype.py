@@ -23,13 +23,15 @@ def get_doctype_sdl(doctype, options):
     if not options.disable_enum_select_fields:
         sdl += get_select_docfield_enums(meta=meta, options=options)
 
-    # DocTypeSortingInput
-    if not meta.issingle:
-        sdl += get_sorting_input(meta)
-        sdl += get_connection_type(meta)
+    if not meta.istable or options.include_default_childdoctype_queries:
 
-    # Extend QueryType
-    sdl += get_query_type_extension(meta)
+        # DocTypeSortingInput
+        if not meta.issingle:
+            sdl += get_sorting_input(meta)
+            sdl += get_connection_type(meta)
+
+        # Extend QueryType
+        sdl += get_query_type_extension(meta)
 
     return sdl
 

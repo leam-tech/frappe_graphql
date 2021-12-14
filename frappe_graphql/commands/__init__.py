@@ -21,10 +21,12 @@ def graphql():
               help="Ignore custom fields generation")
 @click.option("--disable-enum-select-fields", is_flag=True, default=False,
               help="Disable generating GQLEnums for Frappe Select DocFields")
+@click.option("--include_default_childdoctype_queries", is_flag=True, default=False,
+              help="Include default queries for Child DocTypes (not recommended)")
 @pass_context
 def generate_sdl(
     context, output_dir=None, app=None, module=None, doctype=None,
-    ignore_custom_fields=False, disable_enum_select_fields=False
+    ignore_custom_fields=False, disable_enum_select_fields=False, include_default_childdoctype_queries=False
 ):
     site = get_site(context=context)
     try:
@@ -45,7 +47,8 @@ def generate_sdl(
             modules=list(module),
             doctypes=list(doctype),
             ignore_custom_fields=ignore_custom_fields,
-            disable_enum_select_fields=disable_enum_select_fields
+            disable_enum_select_fields=disable_enum_select_fields,
+            include_default_childdoctype_queries=include_default_childdoctype_queries
         )
     finally:
         frappe.destroy()
