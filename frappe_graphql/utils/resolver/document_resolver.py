@@ -1,4 +1,4 @@
-from graphql import GraphQLResolveInfo, GraphQLEnumType
+from graphql import GraphQLResolveInfo, GraphQLEnumType, GraphQLNonNull
 
 import frappe
 from frappe.utils import cint
@@ -93,10 +93,14 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
                 name=_get_value(df.fieldname, ignore_translation=True),
                 doctype=link_dt,
                 __ignore_perms=__ignore_perms)
-        elif df.fieldtype == "Select" and isinstance(info.return_type, GraphQLEnumType):
+        elif df.fieldtype == "Select":
             # We allow Select fields whose returnType is just Strings
-            value = _get_value(df.fieldname, ignore_translation=True) or ""
-            return frappe.scrub(value).upper()
+            return_type = info.return_type
+            if isinstance(return_type, GraphQLNonNull):
+                return_type = return_type.of_type
+            if isinstance(return_type, GraphQLEnumType):
+                value = _get_value(df.fieldname, ignore_translation=True) or ""
+                return frappe.scrub(value).upper()
 
     return _get_value(info.field_name)
 
