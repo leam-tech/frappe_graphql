@@ -194,11 +194,11 @@ def get_graphql_type(meta, docfield, options: dict):
     elif docfield.fieldtype in float_fieldtypes:
         graphql_type = "Float"
     elif docfield.fieldtype == "Link":
-        graphql_type = f"{docfield.options.replace(' ', '')}"
+        graphql_type = f"{format_doctype(docfield.options)}"
     elif docfield.fieldtype == "Dynamic Link":
         graphql_type = "BaseDocType"
     elif docfield.fieldtype in table_fields:
-        graphql_type = f"[{docfield.options.replace(' ', '')}!]!"
+        graphql_type = f"[{format_doctype(docfield.options)}!]!"
     elif docfield.fieldtype == "Password":
         graphql_type = "Password"
     elif docfield.fieldtype == "Select":
@@ -227,8 +227,15 @@ def get_plural(doctype):
 
 
 def format_doctype(doctype):
-    return doctype.replace(" ", "")
+    return remove_reserved_characters(doctype.replace(" ", "").replace("-", "_"))
 
+
+def get_select_docfield_enum_name(doctype, docfield, generated_enums=None):
+def remove_reserved_characters(string):
+    return re.sub(r"[^A-Za-z0-9_ ]", "", string)
+
+
+def contains_reserved_characters(string):
 
 def get_select_docfield_enum_name(doctype, docfield):
     return f"{doctype}{(docfield.label or docfield.fieldname).title()}SelectOptions".replace(
