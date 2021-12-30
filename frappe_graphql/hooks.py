@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 # from . import __version__ as app_version
 
 app_name = "frappe_graphql"
@@ -37,13 +38,14 @@ graphql_schema_processors = [
     "frappe_graphql.frappe_graphql.subscription.doc_events.bind",
 ]
 
+graphql_middlewares = ["frappe_graphql.utils.middlewares.disable_introspection_queries.disable_introspection_queries"]
+
 doc_events = {
     "*": {
         # Doc Events Subscription
         "on_change": "frappe_graphql.frappe_graphql.subscription.doc_events.on_change"
     }
 }
-
 
 # Includes in <head>
 # ------------------

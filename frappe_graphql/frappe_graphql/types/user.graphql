@@ -66,11 +66,6 @@ type User implements BaseDocType {
   api_secret: Password
 }
 
-extend type User {
-  override_as_global: Int
-  quick_login_pin: String
-}
-
 enum UserSortField {
   NAME
   CREATION

@@ -209,7 +209,7 @@ def get_graphql_type(meta, docfield, options: dict):
             [len(x or "") == 0 for x in (docfield.options or "").split("\n")])
         if docfield.reqd and has_empty_option:
             frappe.throw(
-                "Please fix your HEAD on select field: {}".format(docfield.name))
+                frappe._("Please check your SELECT doc field on doctype {0}: {1}. The select field cannot be empty and required.").format(docfield.parent, docfield.fieldname))
         if docfield.reqd and not has_empty_option:
             graphql_type += "!"
     else:
