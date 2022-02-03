@@ -67,8 +67,10 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
 
         # ignore_doc_resolver_translation might be helpful for overriding document_resolver
         # which might be a simple wrapper around this function (document_resolver)
+        _df = meta.get_field(info.field_name)
         if not ignore_translation and isinstance(
-                value, str) and not frappe.flags.ignore_doc_resolver_translation:
+            value, str) and not frappe.flags.ignore_doc_resolver_translation and _df and cint(
+                _df.get("translatable")):
             return frappe._(value)
 
         if __ignore_perms:
