@@ -1,3 +1,4 @@
+import re
 import inflect
 
 import frappe
@@ -13,15 +14,17 @@ def get_doctype_sdl(doctype, options):
         ignore_custom_fields=False
     )
     """
+    generated_enums = frappe._dict()
+
     meta = frappe.get_meta(doctype)
-    sdl, defined_fieldnames = get_basic_doctype_sdl(meta, options=options)
+    sdl, defined_fieldnames = get_basic_doctype_sdl(meta, options=options, generated_enums=generated_enums)
 
     # Extend Doctype with Custom Fields
     if not options.ignore_custom_fields and len(meta.get_custom_fields()):
         sdl += get_custom_field_sdl(meta, defined_fieldnames, options=options)
 
     if not options.disable_enum_select_fields:
-        sdl += get_select_docfield_enums(meta=meta, options=options)
+        sdl += get_select_docfield_enums(meta=meta, options=options, generated_enums=generated_enums)
 
     # DocTypeSortingInput
     if not meta.issingle:
@@ -34,7 +37,7 @@ def get_doctype_sdl(doctype, options):
     return sdl
 
 
-def get_basic_doctype_sdl(meta: Meta, options: dict):
+def get_basic_doctype_sdl(meta: Meta, options: dict, generated_enums=None):
     dt = format_doctype(meta.name)
     sdl = f"type {dt} implements BaseDocType {{"
 
@@ -62,7 +65,7 @@ def get_basic_doctype_sdl(meta: Meta, options: dict):
         if cint(field.get("is_custom_field")):
             continue
         defined_fieldnames.append(field.fieldname)
-        sdl += f"\n  {get_field_sdl(meta, field, options=options)}"
+        sdl += f"\n  {get_field_sdl(meta, field, options=options, generated_enums=generated_enums)}"
         if field.fieldtype in ("Link", "Dynamic Link"):
             sdl += f"\n  {get_link_field_name_sdl(field)}"
 
@@ -87,14 +90,26 @@ def get_custom_field_sdl(meta, defined_fieldnames, options):
     return sdl
 
 
-def get_select_docfield_enums(meta, options):
+def get_select_docfield_enums(meta, options, generated_enums=None):
     sdl = ""
     for field in meta.get("fields", {"fieldtype": "Select"}):
-        if options.ignore_custom_fields and cint(field.get("is_custom_field")):
+
+        has_no_options = all([len(x or "") == 0 for x in (field.options or "").split("\n")])
+
+        has_invalid_options = False
+        if any([
+            contains_reserved_characters(option)
+            for option in (field.options or "").split("\n")
+        ]):
+            has_invalid_options = True
+
+        if (options.ignore_custom_fields and cint(field.get("is_custom_field"))) \
+                or has_no_options \
+                or has_invalid_options:
             continue
 
         sdl += "\n\n"
-        sdl += f"enum {get_select_docfield_enum_name(meta.name, field)} {{"
+        sdl += f"enum {get_select_docfield_enum_name(meta.name, field, generated_enums)} {{"
         for option in (field.get("options") or "").split("\n"):
             if not option or not len(option):
                 continue
@@ -166,15 +181,15 @@ def get_query_type_extension(meta: Meta):
     return sdl
 
 
-def get_field_sdl(meta, docfield, options: dict):
-    return f"{docfield.fieldname}: {get_graphql_type(meta, docfield, options=options)}"
+def get_field_sdl(meta, docfield, options: dict, generated_enums: list = None):
+    return f"{docfield.fieldname}: {get_graphql_type(meta, docfield, options=options, generated_enums=generated_enums)}"
 
 
 def get_link_field_name_sdl(docfield):
     return f"{docfield.fieldname}__name: String"
 
 
-def get_graphql_type(meta, docfield, options: dict):
+def get_graphql_type(meta, docfield, options: dict, generated_enums=None):
     string_fieldtypes = [
         "Small Text", "Long Text", "Code", "Text Editor", "Markdown Editor", "HTML Editor",
         "Date", "Datetime", "Time", "Text", "Data", "Rating", "Read Only",
@@ -194,23 +209,29 @@ def get_graphql_type(meta, docfield, options: dict):
     elif docfield.fieldtype in float_fieldtypes:
         graphql_type = "Float"
     elif docfield.fieldtype == "Link":
-        graphql_type = f"{docfield.options.replace(' ', '')}"
+        graphql_type = f"{format_doctype(docfield.options)}"
     elif docfield.fieldtype == "Dynamic Link":
         graphql_type = "BaseDocType"
     elif docfield.fieldtype in table_fields:
-        graphql_type = f"[{docfield.options.replace(' ', '')}!]!"
+        graphql_type = f"[{format_doctype(docfield.options)}!]!"
     elif docfield.fieldtype == "Password":
         graphql_type = "Password"
     elif docfield.fieldtype == "Select":
-        graphql_type = get_select_docfield_enum_name(meta.name, docfield)
+        graphql_type = get_select_docfield_enum_name(meta.name, docfield, generated_enums)
 
         # Mark NonNull if there is no empty option and is required
-        has_empty_option = any(
-            [len(x or "") == 0 for x in (docfield.options or "").split("\n")])
-        if docfield.reqd and has_empty_option:
-            frappe.throw(
-                frappe._("Please check your SELECT doc field on doctype {0}: {1}. The select field cannot be empty and required.").format(docfield.parent, docfield.fieldname))
-        if docfield.reqd and not has_empty_option:
+        has_empty_option = all([len(x or "") == 0 for x in (docfield.options or "").split("\n")])
+
+        has_invalid_options = False
+        if any([
+            contains_reserved_characters(option)
+            for option in (docfield.options or "").split("\n")
+        ]):
+            has_invalid_options = True
+
+        if has_empty_option or has_invalid_options:
+            graphql_type = "String"
+        if docfield.reqd:
             graphql_type += "!"
     else:
         frappe.throw(f"Invalid fieldtype: {docfield.fieldtype}")
@@ -227,9 +248,39 @@ def get_plural(doctype):
 
 
 def format_doctype(doctype):
-    return doctype.replace(" ", "")
+    return remove_reserved_characters(doctype.replace(" ", "").replace("-", "_"))
 
 
-def get_select_docfield_enum_name(doctype, docfield):
-    return f"{doctype}{(docfield.label or docfield.fieldname).title()}SelectOptions".replace(
-        " ", "")
+def get_select_docfield_enum_name(doctype, docfield, generated_enums=None):
+
+    name = remove_reserved_characters(
+        f"{doctype}{(docfield.label or docfield.fieldname).title()}SelectOptions"
+        .replace(" ", ""))
+
+    if name in generated_enums.values():
+        name = remove_reserved_characters(
+            f"{doctype}{(docfield.fieldname).title()}SelectOptions"
+            .replace(" ", ""))
+
+    if generated_enums is not None:
+        if docfield in generated_enums:
+            name = generated_enums[docfield]
+        else:
+            generated_enums[docfield] = name
+
+    return name
+
+
+def remove_reserved_characters(string):
+    return re.sub(r"[^A-Za-z0-9_ ]", "", string)
+
+
+def contains_reserved_characters(string):
+    if not string:
+        return False
+
+    matches = re.match(r"^[A-Za-z_ ][A-Za-z0-9_ ]*$", string)
+    if matches:
+        return False
+    else:
+        return True
