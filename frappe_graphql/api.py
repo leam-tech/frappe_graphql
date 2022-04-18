@@ -2,7 +2,7 @@ from graphql import GraphQLError, validate, parse
 from typing import List
 
 import frappe
-from frappe.utils import cint
+from frappe.utils import cint, strip_html_tags
 from . import get_schema
 from .graphql import execute
 from .utils.depth_limit_validator import depth_limit_validator
@@ -41,6 +41,7 @@ def execute_gql_query():
         for err in output.errors:
             if isinstance(err, GraphQLError):
                 err = err.formatted
+                err['message'] = strip_html_tags(err.get("message"))
             errors.append(err)
         output.errors = errors
 
