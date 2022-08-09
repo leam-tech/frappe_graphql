@@ -26,7 +26,7 @@ def get_doctype_sdl(doctype, options):
     if not options.disable_enum_select_fields:
         sdl += get_select_docfield_enums(meta=meta, options=options, generated_enums=generated_enums)
 
-    if not meta.istable or options.include_default_childdoctype_queries:
+    if not meta.istable:
 
         # DocTypeSortingInput
         if not meta.issingle:

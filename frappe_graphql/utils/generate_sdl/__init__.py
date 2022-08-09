@@ -47,8 +47,7 @@ def make_doctype_sdl_files(
     modules=[],
     doctypes=[],
     ignore_custom_fields=False,
-    disable_enum_select_fields=False,
-    include_default_childdoctype_queries=False,
+    disable_enum_select_fields=False
 ):
     specific_doctypes = doctypes or []
     doctypes = get_doctypes(
@@ -59,8 +58,7 @@ def make_doctype_sdl_files(
 
     options = frappe._dict(
         disable_enum_select_fields=disable_enum_select_fields,
-        ignore_custom_fields=ignore_custom_fields,
-        include_default_childdoctype_queries=include_default_childdoctype_queries
+        ignore_custom_fields=ignore_custom_fields
     )
 
     if not os.path.exists(target_dir):
