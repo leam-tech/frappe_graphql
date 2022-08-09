@@ -1,8 +1,11 @@
-from graphql import GraphQLError
+from graphql import GraphQLError, validate, parse
 from typing import List
 
 import frappe
+from frappe.utils import cint, strip_html_tags
+from . import get_schema
 from .graphql import execute
+from .utils.depth_limit_validator import depth_limit_validator
 
 from .utils.http import get_masked_variables, get_operation_name
 
@@ -10,11 +13,23 @@ from .utils.http import get_masked_variables, get_operation_name
 @frappe.whitelist(allow_guest=True)
 def execute_gql_query():
     query, variables, operation_name = get_query()
-    output = execute(
-        query=query,
-        variables=variables,
-        operation_name=operation_name
+    validation_errors = validate(
+        schema=get_schema(),
+        document_ast=parse(query),
+        rules=(
+            depth_limit_validator(
+                max_depth=cint(frappe.local.conf.get("frappe_graphql_depth_limit")) or 10
+            ),
+        )
     )
+    if validation_errors:
+        output = frappe._dict(errors=validation_errors)
+    else:
+        output = execute(
+            query=query,
+            variables=variables,
+            operation_name=operation_name
+        )
 
     frappe.clear_messages()
     frappe.local.response = output
@@ -26,6 +41,7 @@ def execute_gql_query():
         for err in output.errors:
             if isinstance(err, GraphQLError):
                 err = err.formatted
+                err['message'] = strip_html_tags(err.get("message"))
             errors.append(err)
         output.errors = errors
 

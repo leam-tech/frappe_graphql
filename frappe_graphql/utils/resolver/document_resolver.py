@@ -1,4 +1,4 @@
-from graphql import GraphQLResolveInfo, GraphQLEnumType
+from graphql import GraphQLResolveInfo, GraphQLEnumType, GraphQLNonNull
 
 import frappe
 from frappe.utils import cint
@@ -67,8 +67,10 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
 
         # ignore_doc_resolver_translation might be helpful for overriding document_resolver
         # which might be a simple wrapper around this function (document_resolver)
+        _df = meta.get_field(info.field_name)
         if not ignore_translation and isinstance(
-                value, str) and not frappe.flags.ignore_doc_resolver_translation:
+            value, str) and not frappe.flags.ignore_doc_resolver_translation and _df and cint(
+                _df.get("translatable")):
             return frappe._(value)
 
         if __ignore_perms:
@@ -93,10 +95,14 @@ def document_resolver(obj, info: GraphQLResolveInfo, **kwargs):
                 name=_get_value(df.fieldname, ignore_translation=True),
                 doctype=link_dt,
                 __ignore_perms=__ignore_perms)
-        elif df.fieldtype == "Select" and isinstance(info.return_type, GraphQLEnumType):
+        elif df.fieldtype == "Select":
             # We allow Select fields whose returnType is just Strings
-            value = _get_value(df.fieldname, ignore_translation=True) or ""
-            return frappe.scrub(value).upper()
+            return_type = info.return_type
+            if isinstance(return_type, GraphQLNonNull):
+                return_type = return_type.of_type
+            if isinstance(return_type, GraphQLEnumType):
+                value = _get_value(df.fieldname, ignore_translation=True) or ""
+                return frappe.scrub(value).upper()
 
     return _get_value(info.field_name)
 
