@@ -7,7 +7,6 @@ from frappe.realtime import emit_via_redis
 from frappe.utils import now_datetime, get_datetime
 
 from frappe_graphql import get_schema
-from frappe_graphql.utils.resolver import default_field_resolver
 
 """
 Implemented similar to
@@ -185,7 +184,6 @@ def gql_transform(subscription, selection_set, obj):
     exc_ctx = ExecutionContext.build(
         schema=schema,
         document=document,
-        field_resolver=default_field_resolver
     )
     data = exc_ctx.execute_operation(exc_ctx.operation, frappe._dict(__subscription__=obj))
     result = frappe._dict(exc_ctx.build_response(data).formatted)

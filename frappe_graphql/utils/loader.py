@@ -6,6 +6,7 @@ import graphql
 from graphql import parse
 from graphql.error import GraphQLSyntaxError
 
+from .resolver import setup_default_resolvers
 from .exceptions import GraphQLFileSyntaxError
 
 graphql_schemas = {}
@@ -18,6 +19,7 @@ def get_schema():
         return graphql_schemas.get(frappe.local.site)
 
     schema = graphql.build_schema(get_typedefs())
+    setup_default_resolvers(schema=schema)
     execute_schema_processors(schema=schema)
 
     graphql_schemas[frappe.local.site] = schema
