@@ -21,6 +21,7 @@ def graphql():
               help="Ignore custom fields generation")
 @click.option("--disable-enum-select-fields", is_flag=True, default=False,
               help="Disable generating GQLEnums for Frappe Select DocFields")
+
 @pass_context
 def generate_sdl(
     context, output_dir=None, app=None, module=None, doctype=None,

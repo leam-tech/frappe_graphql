@@ -41,8 +41,14 @@ GQL_RESERVED_TERMS = [
 ]
 
 
-def make_doctype_sdl_files(target_dir, app=None, modules=[], doctypes=[],
-                           ignore_custom_fields=False, disable_enum_select_fields=False):
+def make_doctype_sdl_files(
+    target_dir,
+    app=None,
+    modules=[],
+    doctypes=[],
+    ignore_custom_fields=False,
+    disable_enum_select_fields=False
+):
     specific_doctypes = doctypes or []
     doctypes = get_doctypes(
         app=app,
