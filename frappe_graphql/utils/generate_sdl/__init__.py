@@ -14,7 +14,7 @@ SDL_PREDEFINED_DOCTYPES = [
     "File",
 
     # Owner, Modified By
-    "User",
+    "User", "User Type", "User Type Module", "User Document Type", "User Select Document Type",
 
     # User
     "Gender", "Has Role", "Role Profile", "Role", "Language",
@@ -75,7 +75,6 @@ def make_doctype_sdl_files(
         # Warn if there is an "s" form plural of a doctype
         if doctype[:-2:-1] == "s":
             if doctype[:-1:1] in doctypes and doctype not in IGNORED_DOCTYPES:
-
                 IGNORED_DOCTYPES.append(doctype)
 
                 print("WARN: sdl generation of DocTypes that are named with the 's' form " +

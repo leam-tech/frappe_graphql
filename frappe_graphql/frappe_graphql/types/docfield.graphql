@@ -6,13 +6,13 @@ type DocField implements BaseDocType {
   modified: String
   modified_by: User!
   parent: BaseDocType
-  parent__name: String
   parentfield: String
   parenttype: String
   idx: Int
   docstatus: Int
   owner__name: String!
   modified_by__name: String!
+  parent__name: String
   label: String
   fieldtype: String!
   fieldname: String
@@ -61,34 +61,4 @@ type DocField implements BaseDocType {
   description: String
   oldfieldname: String
   oldfieldtype: String
-}
-
-enum DocFieldSortField {
-  NAME
-  CREATION
-  MODIFIED
-  LABEL
-  FIELDTYPE
-  FIELDNAME
-}
-
-input DocFieldSortingInput {
-  direction: SortDirection!
-  field: DocFieldSortField!
-}
-
-type DocFieldCountableEdge {
-  cursor: String!
-  node: DocField!
-}
-
-type DocFieldCountableConnection {
-  pageInfo: PageInfo!
-  totalCount: Int
-  edges: [DocFieldCountableEdge!]!
-}
-
-extend type Query {
-  DocField(name: String!): DocField!
-  DocFields(filter: [DBFilterInput], sortBy: DocFieldSortingInput, before: String, after: String, first: Int, last: Int): DocFieldCountableConnection!
 }

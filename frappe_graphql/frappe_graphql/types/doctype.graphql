@@ -26,9 +26,11 @@ type DocType implements BaseDocType {
   track_views: Int
   custom: Int
   beta: Int
+  is_virtual: Int
   fields: [DocField!]!
   autoname: String
-  name_case: DocTypeNameCaseSelectOptions
+  name_case: String
+  allow_rename: Int
   description: String
   documentation: String
   image_field: String
@@ -37,7 +39,6 @@ type DocType implements BaseDocType {
   max_attachments: Int
   hide_toolbar: Int
   allow_copy: Int
-  allow_rename: Int
   allow_import: Int
   allow_events_in_timeline: Int
   allow_auto_repeat: Int
@@ -45,12 +46,14 @@ type DocType implements BaseDocType {
   search_fields: String
   default_print_format: String
   sort_field: String
-  sort_order: DocTypeDefaultSortOrderSelectOptions
-  document_type: DocTypeShowInModuleSectionSelectOptions
+  sort_order: String
+  document_type: String
   icon: String
   color: String
   show_preview_popup: Int
   show_name_in_global_search: Int
+  default_email_template: EmailTemplate
+  default_email_template__name: String
   email_append_to: Int
   sender_field: String
   subject_field: String
@@ -66,29 +69,7 @@ type DocType implements BaseDocType {
   index_web_pages_for_search: Int
   route: String
   is_published_field: String
-  engine: DocTypeDatabaseEngineSelectOptions
-}
-
-enum DocTypeNameCaseSelectOptions {
-  TITLE_CASE
-  UPPER_CASE
-}
-
-enum DocTypeDefaultSortOrderSelectOptions {
-  ASC
-  DESC
-}
-
-enum DocTypeShowInModuleSectionSelectOptions {
-  DOCUMENT
-  SETUP
-  SYSTEM
-  OTHER
-}
-
-enum DocTypeDatabaseEngineSelectOptions {
-  INNODB
-  MYISAM
+  engine: String
 }
 
 enum DocTypeSortField {
