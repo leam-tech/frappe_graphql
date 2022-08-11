@@ -203,7 +203,7 @@ def deferred_list(_list: List[Any]) -> DeferredValue:
                 values.append(value)
             ret.resolve(values)
 
-    for p in _list:
+    for p in deferred_values.values():
         p.add_callback(handle_success)
         p.add_errback(ret.reject)
 
