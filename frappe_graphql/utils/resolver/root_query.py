@@ -4,6 +4,8 @@ import frappe
 from frappe.model.meta import is_single
 
 from frappe_graphql import CursorPaginator
+
+from .dataloaders import get_doctype_dataloader
 from .utils import get_singular_doctype, get_plural_doctype
 
 
@@ -32,11 +34,8 @@ def _get_doc_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     dt = get_singular_doctype(info.field_name)
     if is_single(dt):
         kwargs["name"] = dt
-    elif not frappe.db.exists(dt, kwargs.get("name")):
-        raise frappe.DoesNotExistError(
-            frappe._("{0} {1} not found").format(frappe._(dt), kwargs.get("name")))
 
-    return frappe.get_doc(dt, kwargs["name"])
+    return get_doctype_dataloader(dt).load(kwargs["name"])
 
 
 def _doc_cursor_resolver(obj, info: GraphQLResolveInfo, **kwargs):
