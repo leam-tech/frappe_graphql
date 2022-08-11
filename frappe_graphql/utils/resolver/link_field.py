@@ -16,7 +16,10 @@ def setup_link_field_resolvers(schema: GraphQLSchema):
             continue
 
         meta = frappe.get_meta(dt)
-        for df in meta.get_link_fields() + meta.get_dynamic_link_fields():
+        link_dfs = meta.get_link_fields() + meta.get_dynamic_link_fields() + \
+            _get_default_field_links()
+
+        for df in link_dfs:
             if df.fieldname not in gql_type.fields:
                 continue
 
@@ -73,3 +76,27 @@ def _resolve_link_name_field(obj, info: GraphQLResolveInfo, **kwargs):
 
 def _get_frappe_docfield_from_resolve_info(info: GraphQLResolveInfo):
     return getattr(info.parent_type.fields[info.field_name], "frappe_docfield", None)
+
+
+def _get_default_field_links():
+
+    def _get_default_field_df(fieldname):
+        df = frappe._dict(
+            fieldname=fieldname,
+            fieldtype="Data"
+        )
+        if fieldname in ("owner", "modified_by"):
+            df.fieldtype = "Link"
+            df.options = "User"
+
+        if fieldname == "parent":
+            df.fieldtype = "Dynamic Link"
+            df.options = "parenttype"
+
+        return df
+
+    return [
+        _get_default_field_df(x) for x in [
+            "owner", "modified_by", "parent"
+        ]
+    ]

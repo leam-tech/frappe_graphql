@@ -22,7 +22,7 @@ def _get_document_loader_fn(doctype: str):
         docs = frappe.get_all(
             doctype=doctype,
             filters=[["name", "IN", keys]],
-            fields=["*"],
+            fields=["*", f"'{doctype}' as doctype"],
             limit_page_length=len(keys) + 1
         )
 

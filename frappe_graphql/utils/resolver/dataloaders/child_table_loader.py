@@ -24,7 +24,10 @@ def get_child_table_loader(child_doctype: str, parent_doctype: str, parentfield:
 def _get_child_table_loader_fn(child_doctype: str, parent_doctype: str, parentfield: str):
     def _inner(keys):
         rows = frappe.db.sql(f"""
-        SELECT * FROM `tab{child_doctype}`
+        SELECT 
+            *,
+            "{child_doctype}" as doctype
+        FROM `tab{child_doctype}`
         WHERE
             parent IN %(parent_keys)s
             AND parenttype = %(parenttype)s
