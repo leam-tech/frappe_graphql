@@ -34,7 +34,7 @@ type User implements BaseDocType {
   birth_date: String
   interest: String
   banner_image: String
-  desk_theme: String
+  desk_theme: UserDeskThemeSelectOptions
   phone: String
   location: String
   bio: String
@@ -46,7 +46,7 @@ type User implements BaseDocType {
   last_password_reset_date: String
   redirect_url: String
   document_follow_notify: Int
-  document_follow_frequency: String
+  document_follow_frequency: UserFrequencySelectOptions
   email_signature: String
   thread_notify: Int
   send_me_a_copy: Int
@@ -71,6 +71,17 @@ type User implements BaseDocType {
   social_logins: [UserSocialLogin!]!
   api_key: String
   api_secret: Password
+}
+
+enum UserDeskThemeSelectOptions {
+  LIGHT
+  DARK
+}
+
+enum UserFrequencySelectOptions {
+  HOURLY
+  DAILY
+  WEEKLY
 }
 
 enum UserSortField {

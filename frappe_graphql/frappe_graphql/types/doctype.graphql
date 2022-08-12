@@ -29,7 +29,7 @@ type DocType implements BaseDocType {
   is_virtual: Int
   fields: [DocField!]!
   autoname: String
-  name_case: String
+  name_case: DocTypeNameCaseSelectOptions
   allow_rename: Int
   description: String
   documentation: String
@@ -46,8 +46,8 @@ type DocType implements BaseDocType {
   search_fields: String
   default_print_format: String
   sort_field: String
-  sort_order: String
-  document_type: String
+  sort_order: DocTypeDefaultSortOrderSelectOptions
+  document_type: DocTypeShowInModuleSectionSelectOptions
   icon: String
   color: String
   show_preview_popup: Int
@@ -69,7 +69,29 @@ type DocType implements BaseDocType {
   index_web_pages_for_search: Int
   route: String
   is_published_field: String
-  engine: String
+  engine: DocTypeDatabaseEngineSelectOptions
+}
+
+enum DocTypeNameCaseSelectOptions {
+  TITLE_CASE
+  UPPER_CASE
+}
+
+enum DocTypeDefaultSortOrderSelectOptions {
+  ASC
+  DESC
+}
+
+enum DocTypeShowInModuleSectionSelectOptions {
+  DOCUMENT
+  SETUP
+  SYSTEM
+  OTHER
+}
+
+enum DocTypeDatabaseEngineSelectOptions {
+  INNODB
+  MYISAM
 }
 
 enum DocTypeSortField {

@@ -14,9 +14,14 @@ type DocTypeAction implements BaseDocType {
   modified_by__name: String!
   parent__name: String
   label: String!
-  action_type: String!
+  action_type: DocTypeActionActionTypeSelectOptions!
   action: String!
   group: String
   hidden: Int
   custom: Int
+}
+
+enum DocTypeActionActionTypeSelectOptions {
+  SERVER_ACTION
+  ROUTE
 }
