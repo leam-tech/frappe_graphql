@@ -1,0 +1,58 @@
+type EmailDomain implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: BaseDocType
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  parent__name: String
+  domain_name: String
+  email_id: String!
+  email_server: String!
+  use_imap: Int
+  use_ssl: Int
+  incoming_port: String
+  attachment_limit: Int
+  append_to: DocType
+  append_to__name: String
+  smtp_server: String!
+  use_tls: Int
+  use_ssl_for_outgoing: Int
+  append_emails_to_sent_folder: Int
+  smtp_port: String
+}
+
+enum EmailDomainSortField {
+  NAME
+  CREATION
+  MODIFIED
+  DOMAIN_NAME
+}
+
+input EmailDomainSortingInput {
+  direction: SortDirection!
+  field: EmailDomainSortField!
+}
+
+type EmailDomainCountableEdge {
+  cursor: String!
+  node: EmailDomain!
+}
+
+type EmailDomainCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [EmailDomainCountableEdge!]!
+}
+
+extend type Query {
+  EmailDomain(name: String!): EmailDomain!
+  EmailDomains(filter: [DBFilterInput], sortBy: EmailDomainSortingInput, before: String, after: String, first: Int, last: Int): EmailDomainCountableConnection!
+}

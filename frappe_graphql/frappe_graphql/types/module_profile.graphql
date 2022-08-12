@@ -1,0 +1,46 @@
+type ModuleProfile implements BaseDocType {
+  doctype: String
+  name: String
+  owner: User!
+  creation: String
+  modified: String
+  modified_by: User!
+  parent: BaseDocType
+  parentfield: String
+  parenttype: String
+  idx: Int
+  docstatus: Int
+  owner__name: String!
+  modified_by__name: String!
+  parent__name: String
+  module_profile_name: String!
+  block_modules: [BlockModule!]!
+}
+
+enum ModuleProfileSortField {
+  NAME
+  CREATION
+  MODIFIED
+  MODULE_PROFILE_NAME
+}
+
+input ModuleProfileSortingInput {
+  direction: SortDirection!
+  field: ModuleProfileSortField!
+}
+
+type ModuleProfileCountableEdge {
+  cursor: String!
+  node: ModuleProfile!
+}
+
+type ModuleProfileCountableConnection {
+  pageInfo: PageInfo!
+  totalCount: Int
+  edges: [ModuleProfileCountableEdge!]!
+}
+
+extend type Query {
+  ModuleProfile(name: String!): ModuleProfile!
+  ModuleProfiles(filter: [DBFilterInput], sortBy: ModuleProfileSortingInput, before: String, after: String, first: Int, last: Int): ModuleProfileCountableConnection!
+}
