@@ -35,11 +35,18 @@ def _get_doc_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     if is_single(dt):
         kwargs["name"] = dt
 
-    return get_doctype_dataloader(dt).load(kwargs["name"])
+    dn = kwargs["name"]
+    if not frappe.has_permission(doctype=dt, doc=dn):
+        raise frappe.PermissionError(frappe._("No permission for {0}").format(dt + " " + dn))
+
+    return get_doctype_dataloader(dt).load(dn)
 
 
 def _doc_cursor_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     plural_doctype = get_plural_doctype(info.field_name)
-    frappe.has_permission(doctype=plural_doctype, throw=True)
+
+    frappe.has_permission(
+        doctype=plural_doctype,
+        throw=True)
 
     return CursorPaginator(doctype=plural_doctype).resolve(obj, info, **kwargs)
