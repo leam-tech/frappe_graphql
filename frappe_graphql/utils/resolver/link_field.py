@@ -50,10 +50,7 @@ def _resolve_link_field(obj, info: GraphQLResolveInfo, **kwargs):
     if not (dt and dn):
         return None
 
-    # We need a dataloader solution for permission check
-    if not frappe.has_permission(doctype=dt, doc=dn):
-        raise frappe.PermissionError(frappe._("No permission for {0}").format(dt + " " + dn))
-
+    # Permission check is done within get_doctype_dataloader via get_list
     return get_doctype_dataloader(dt).load(dn)
 
 
@@ -70,10 +67,7 @@ def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
     if not dn:
         return None
 
-    # We need a dataloader solution for permission check
-    if not frappe.has_permission(doctype=dt, doc=dn):
-        raise frappe.PermissionError(frappe._("No permission for {0}").format(dt + " " + dn))
-
+    # Permission check is done within get_doctype_dataloader via get_list
     return get_doctype_dataloader(dt).load(dn)
 
 

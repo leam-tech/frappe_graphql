@@ -19,7 +19,7 @@ def get_doctype_dataloader(doctype: str) -> DataLoader:
 def _get_document_loader_fn(doctype: str):
 
     def _load_documents(keys: List[str]):
-        docs = frappe.get_all(
+        docs = frappe.get_list(
             doctype=doctype,
             filters=[["name", "IN", keys]],
             fields=["*", f"'{doctype}' as doctype"],
