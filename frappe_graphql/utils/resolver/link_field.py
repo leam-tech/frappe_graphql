@@ -50,6 +50,7 @@ def _resolve_link_field(obj, info: GraphQLResolveInfo, **kwargs):
     if not (dt and dn):
         return None
 
+    # Permission check is done within get_doctype_dataloader via get_list
     return get_doctype_dataloader(dt).load(dn)
 
 
@@ -66,6 +67,7 @@ def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
     if not dn:
         return None
 
+    # Permission check is done within get_doctype_dataloader via get_list
     return get_doctype_dataloader(dt).load(dn)
 
 
