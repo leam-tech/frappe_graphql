@@ -23,6 +23,11 @@ def setup_child_table_resolvers(schema: GraphQLSchema):
 
 
 def _child_table_resolver(obj, info: GraphQLResolveInfo, **kwargs):
+    # If the obj already has a non None value, we can return it.
+    # This happens when the resolver returns a full doc
+    if obj.get(info.field_name) is not None:
+        return obj.get(info.field_name)
+
     df = getattr(info.parent_type.fields[info.field_name], "frappe_docfield", None)
     if not df:
         return []

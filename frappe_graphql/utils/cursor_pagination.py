@@ -3,6 +3,8 @@ from graphql import GraphQLResolveInfo, GraphQLError
 
 import frappe
 
+from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
+
 
 class CursorPaginator(object):
     def __init__(
@@ -142,11 +144,15 @@ class CursorPaginator(object):
 
         return frappe.get_list(
             doctype,
-            fields=["*", f"SUBSTR(\".{doctype}\", 2) as doctype"] + sorting_fields,
+            fields=self.get_fields_to_fetch(doctype, filters, sorting_fields),
             filters=filters,
             order_by=f"{', '.join([f'{x} {sort_dir}' for x in sorting_fields])}",
             limit_page_length=limit
         )
+
+    def get_fields_to_fetch(self, doctype, filters, sorting_fields):
+        fieldnames = get_allowed_fieldnames_for_doctype(doctype)
+        return list(set(fieldnames + [f"SUBSTR(\".{doctype}\", 2) as doctype"] + sorting_fields))
 
     def get_sort_args(self, sorting_input=None):
         sort_dir = self.default_sorting_direction if self.default_sorting_direction in (

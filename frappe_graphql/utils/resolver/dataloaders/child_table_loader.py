@@ -1,9 +1,10 @@
+from collections import OrderedDict
+
 import frappe
 
 from frappe_graphql.utils.execution import DataLoader
+from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
 from .locals import get_loader_from_locals, set_loader_in_locals
-
-from collections import OrderedDict
 
 
 def get_child_table_loader(child_doctype: str, parent_doctype: str, parentfield: str) -> DataLoader:
@@ -23,10 +24,14 @@ def get_child_table_loader(child_doctype: str, parent_doctype: str, parentfield:
 
 def _get_child_table_loader_fn(child_doctype: str, parent_doctype: str, parentfield: str):
     def _inner(keys):
+        fieldnames = get_allowed_fieldnames_for_doctype(
+            doctype=child_doctype,
+            parent_doctype=parent_doctype
+        )
+
         rows = frappe.db.sql(f"""
-        SELECT 
-            *,
-            "{child_doctype}" as doctype
+        SELECT
+            {', '.join(fieldnames)}
         FROM `tab{child_doctype}`
         WHERE
             parent IN %(parent_keys)s

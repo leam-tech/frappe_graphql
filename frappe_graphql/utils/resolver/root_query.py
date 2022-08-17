@@ -5,7 +5,6 @@ from frappe.model.meta import is_single
 
 from frappe_graphql import CursorPaginator
 
-from .dataloaders import get_doctype_dataloader
 from .utils import get_singular_doctype, get_plural_doctype
 
 
@@ -39,7 +38,9 @@ def _get_doc_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     if not frappe.has_permission(doctype=dt, doc=dn):
         raise frappe.PermissionError(frappe._("No permission for {0}").format(dt + " " + dn))
 
-    return get_doctype_dataloader(dt).load(dn)
+    doc = frappe.get_doc(dt, dn)
+    doc.apply_fieldlevel_read_permissions()
+    return doc
 
 
 def _doc_cursor_resolver(obj, info: GraphQLResolveInfo, **kwargs):
