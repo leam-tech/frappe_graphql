@@ -29,9 +29,11 @@ def _get_child_table_loader_fn(child_doctype: str, parent_doctype: str, parentfi
             parent_doctype=parent_doctype
         )
 
+        select_fields = ", ".join([f"`{x}`" if "`" not in x else x for x in fieldnames])
+
         rows = frappe.db.sql(f"""
         SELECT
-            {', '.join(fieldnames)}
+            {select_fields}
         FROM `tab{child_doctype}`
         WHERE
             parent IN %(parent_keys)s
