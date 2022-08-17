@@ -149,6 +149,20 @@ class DeferredExecutionContext(ExecutionContext):
 
         return get_results()
 
+    def execute_fields_serially(self, *args, **kwargs):
+        result = super().execute_fields_serially(*args, **kwargs)
+        contains_deferred = False
+
+        for v in result.values():
+            if isinstance(v, DeferredValue):
+                contains_deferred = True
+                break
+
+        if contains_deferred:
+            return deferred_dict(result)
+
+        return result
+
     def complete_value(
         self,
         return_type: GraphQLOutputType,
