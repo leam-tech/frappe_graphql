@@ -3,6 +3,7 @@ from typing import List
 import frappe
 
 from frappe_graphql.utils.execution import DataLoader
+from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
 from .locals import get_loader_from_locals, set_loader_in_locals
 
 
@@ -17,12 +18,13 @@ def get_doctype_dataloader(doctype: str) -> DataLoader:
 
 
 def _get_document_loader_fn(doctype: str):
+    fieldnames = get_allowed_fieldnames_for_doctype(doctype)
 
     def _load_documents(keys: List[str]):
         docs = frappe.get_list(
             doctype=doctype,
             filters=[["name", "IN", keys]],
-            fields=["*", f"'{doctype}' as doctype"],
+            fields=fieldnames,
             limit_page_length=len(keys) + 1
         )
 
