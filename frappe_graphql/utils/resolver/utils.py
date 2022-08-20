@@ -1,3 +1,5 @@
+from graphql import GraphQLResolveInfo
+
 import frappe
 
 SINGULAR_DOCTYPE_MAP_REDIS_KEY = "singular_doctype_graphql_map"
@@ -42,3 +44,7 @@ def get_plural_doctype(name):
         frappe.cache().set_value(PLURAL_DOCTYPE_MAP_REDIS_KEY, plural_map)
 
     return plural_map.get(name, None)
+
+
+def get_frappe_df_from_resolve_info(info: GraphQLResolveInfo):
+    return getattr(info.parent_type.fields[info.field_name], "frappe_df", None)

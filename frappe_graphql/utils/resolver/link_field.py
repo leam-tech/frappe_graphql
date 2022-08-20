@@ -1,46 +1,40 @@
-from graphql import GraphQLSchema, GraphQLResolveInfo
+from graphql import GraphQLResolveInfo, GraphQLType
 
 import frappe
+from frappe.model.meta import Meta
 
 from .dataloaders import get_doctype_dataloader
-from .utils import get_singular_doctype
+from .utils import get_frappe_df_from_resolve_info
 
 
-def setup_link_field_resolvers(schema: GraphQLSchema):
+def setup_link_field_resolvers(meta: Meta, gql_type: GraphQLType):
     """
     This will set up Link fields on DocTypes to resolve target docs
     """
-    for type_name, gql_type in schema.type_map.items():
-        dt = get_singular_doctype(type_name)
-        if not dt:
+    link_dfs = meta.get_link_fields() + meta.get_dynamic_link_fields() + \
+        _get_default_field_links()
+
+    for df in link_dfs:
+        if df.fieldname not in gql_type.fields:
             continue
 
-        meta = frappe.get_meta(dt)
-        link_dfs = meta.get_link_fields() + meta.get_dynamic_link_fields() + \
-            _get_default_field_links()
+        gql_field = gql_type.fields[df.fieldname]
+        if df.fieldtype == "Link":
+            gql_field.resolve = _resolve_link_field
+        elif df.fieldtype == "Dynamic Link":
+            gql_field.resolve = _resolve_dynamic_link_field
+        else:
+            continue
 
-        for df in link_dfs:
-            if df.fieldname not in gql_type.fields:
-                continue
+        _name_df = f"{df.fieldname}__name"
+        if _name_df not in gql_type.fields:
+            continue
 
-            gql_field = gql_type.fields[df.fieldname]
-            gql_field.frappe_docfield = df
-            if df.fieldtype == "Link":
-                gql_field.resolve = _resolve_link_field
-            elif df.fieldtype == "Dynamic Link":
-                gql_field.resolve = _resolve_dynamic_link_field
-            else:
-                continue
-
-            _name_df = f"{df.fieldname}__name"
-            if _name_df not in gql_type.fields:
-                continue
-
-            gql_type.fields[_name_df].resolve = _resolve_link_name_field
+        gql_type.fields[_name_df].resolve = _resolve_link_name_field
 
 
 def _resolve_link_field(obj, info: GraphQLResolveInfo, **kwargs):
-    df = _get_frappe_docfield_from_resolve_info(info)
+    df = get_frappe_df_from_resolve_info(info)
     if not df:
         return None
 
@@ -55,7 +49,7 @@ def _resolve_link_field(obj, info: GraphQLResolveInfo, **kwargs):
 
 
 def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
-    df = _get_frappe_docfield_from_resolve_info(info)
+    df = get_frappe_df_from_resolve_info(info)
     if not df:
         return None
 
@@ -74,10 +68,6 @@ def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
 def _resolve_link_name_field(obj, info: GraphQLResolveInfo, **kwargs):
     df = info.field_name.split("__name")[0]
     return obj.get(df)
-
-
-def _get_frappe_docfield_from_resolve_info(info: GraphQLResolveInfo):
-    return getattr(info.parent_type.fields[info.field_name], "frappe_docfield", None)
 
 
 def _get_default_field_links():

@@ -1,25 +1,18 @@
-from graphql import GraphQLSchema, GraphQLResolveInfo
+from graphql import GraphQLType, GraphQLResolveInfo
 
-import frappe
+from frappe.model.meta import Meta
 
 from .dataloaders import get_child_table_loader
-from .utils import get_singular_doctype
+from .utils import get_frappe_df_from_resolve_info
 
 
-def setup_child_table_resolvers(schema: GraphQLSchema):
-    for type_name, gql_type in schema.type_map.items():
-        dt = get_singular_doctype(type_name)
-        if not dt:
+def setup_child_table_resolvers(meta: Meta, gql_type: GraphQLType):
+    for df in meta.get_table_fields():
+        if df.fieldname not in gql_type.fields:
             continue
 
-        meta = frappe.get_meta(dt)
-        for df in meta.get_table_fields():
-            if df.fieldname not in gql_type.fields:
-                continue
-
-            gql_field = gql_type.fields[df.fieldname]
-            gql_field.frappe_docfield = df
-            gql_field.resolve = _child_table_resolver
+        gql_field = gql_type.fields[df.fieldname]
+        gql_field.resolve = _child_table_resolver
 
 
 def _child_table_resolver(obj, info: GraphQLResolveInfo, **kwargs):
@@ -28,7 +21,7 @@ def _child_table_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     if obj.get(info.field_name) is not None:
         return obj.get(info.field_name)
 
-    df = getattr(info.parent_type.fields[info.field_name], "frappe_docfield", None)
+    df = get_frappe_df_from_resolve_info(info)
     if not df:
         return []
 
