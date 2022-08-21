@@ -14,11 +14,7 @@ SDL_PREDEFINED_DOCTYPES = [
     "File",
 
     # Owner, Modified By
-    "User", "User Type", "User Type Module", "User Document Type", "User Select Document Type",
-    "User Social Login", "User Email",
-
-    # email
-    "Email Template", "Email Account", "Email Domain",
+    "User",
 
     # User
     "Gender", "Has Role", "Role Profile", "Role", "Language",
@@ -31,9 +27,6 @@ SDL_PREDEFINED_DOCTYPES = [
     "DocType Link",
     "Domain",
     "Dynamic Link",
-    "Module Profile",
-    "Block Module",
-    "DefaultValue"
 ]
 
 GQL_RESERVED_TERMS = [

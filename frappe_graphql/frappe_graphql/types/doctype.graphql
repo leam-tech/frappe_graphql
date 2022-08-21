@@ -52,7 +52,6 @@ type DocType implements BaseDocType {
   color: String
   show_preview_popup: Int
   show_name_in_global_search: Int
-  default_email_template: EmailTemplate
   default_email_template__name: String
   email_append_to: Int
   sender_field: String

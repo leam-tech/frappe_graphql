@@ -51,24 +51,18 @@ type User implements BaseDocType {
   thread_notify: Int
   send_me_a_copy: Int
   allowed_in_mentions: Int
-  user_emails: [UserEmail!]!
-  module_profile: ModuleProfile
   module_profile__name: String
-  block_modules: [BlockModule!]!
   home_settings: String
-  defaults: [DefaultValue!]!
   simultaneous_sessions: Int
   restrict_ip: String
   last_ip: String
   login_after: Int
-  user_type: UserType
   user_type__name: String
   last_active: String
   login_before: Int
   bypass_restrict_ip_check_if_2fa_enabled: Int
   last_login: String
   last_known_versions: String
-  social_logins: [UserSocialLogin!]!
   api_key: String
   api_secret: Password
 }
