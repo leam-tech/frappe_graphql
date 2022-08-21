@@ -1,4 +1,4 @@
-from graphql import GraphQLResolveInfo, GraphQLType
+from graphql import GraphQLResolveInfo, GraphQLType, is_scalar_type
 
 import frappe
 from frappe.model.meta import Meta
@@ -15,7 +15,8 @@ def setup_link_field_resolvers(meta: Meta, gql_type: GraphQLType):
         _get_default_field_links()
 
     for df in link_dfs:
-        if df.fieldname not in gql_type.fields:
+        if df.fieldname not in gql_type.fields or is_scalar_type(
+                gql_type.fields[df.fieldname].type):
             continue
 
         gql_field = gql_type.fields[df.fieldname]
@@ -71,7 +72,6 @@ def _resolve_link_name_field(obj, info: GraphQLResolveInfo, **kwargs):
 
 
 def _get_default_field_links():
-
     def _get_default_field_df(fieldname):
         df = frappe._dict(
             fieldname=fieldname,
