@@ -15,14 +15,14 @@ type User implements BaseDocType {
   parent__name: String
   enabled: Int
   email: String!
+  first_name: String!
+  middle_name: String
   last_name: String
+  full_name: String
+  username: String
   language: Language
   language__name: String
-  first_name: String!
-  full_name: String
   time_zone: String
-  middle_name: String
-  username: String
   send_welcome_email: Int
   unsubscribed: Int
   user_image: String
@@ -34,7 +34,7 @@ type User implements BaseDocType {
   birth_date: String
   interest: String
   banner_image: String
-  desk_theme: String
+  desk_theme: UserDeskThemeSelectOptions
   phone: String
   location: String
   bio: String
@@ -46,17 +46,18 @@ type User implements BaseDocType {
   last_password_reset_date: String
   redirect_url: String
   document_follow_notify: Int
-  document_follow_frequency: String
+  document_follow_frequency: UserFrequencySelectOptions
   email_signature: String
   thread_notify: Int
   send_me_a_copy: Int
   allowed_in_mentions: Int
+  module_profile__name: String
   home_settings: String
   simultaneous_sessions: Int
   restrict_ip: String
   last_ip: String
   login_after: Int
-  user_type: String
+  user_type__name: String
   last_active: String
   login_before: Int
   bypass_restrict_ip_check_if_2fa_enabled: Int
@@ -64,6 +65,17 @@ type User implements BaseDocType {
   last_known_versions: String
   api_key: String
   api_secret: Password
+}
+
+enum UserDeskThemeSelectOptions {
+  LIGHT
+  DARK
+}
+
+enum UserFrequencySelectOptions {
+  HOURLY
+  DAILY
+  WEEKLY
 }
 
 enum UserSortField {

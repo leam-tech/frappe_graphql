@@ -19,30 +19,3 @@ type DynamicLink implements BaseDocType {
   link_name__name: String
   link_title: String
 }
-
-enum DynamicLinkSortField {
-  NAME
-  CREATION
-  MODIFIED
-}
-
-input DynamicLinkSortingInput {
-  direction: SortDirection!
-  field: DynamicLinkSortField!
-}
-
-type DynamicLinkCountableEdge {
-  cursor: String!
-  node: DynamicLink!
-}
-
-type DynamicLinkCountableConnection {
-  pageInfo: PageInfo!
-  totalCount: Int
-  edges: [DynamicLinkCountableEdge!]!
-}
-
-extend type Query {
-  DynamicLink(name: String!): DynamicLink!
-  DynamicLinks(filter: [DBFilterInput], sortBy: DynamicLinkSortingInput, before: String, after: String, first: Int, last: Int): DynamicLinkCountableConnection!
-}

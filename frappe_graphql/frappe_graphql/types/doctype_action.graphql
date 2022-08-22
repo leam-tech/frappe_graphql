@@ -6,44 +6,22 @@ type DocTypeAction implements BaseDocType {
   modified: String
   modified_by: User!
   parent: BaseDocType
-  parent__name: String
   parentfield: String
   parenttype: String
   idx: Int
   docstatus: Int
   owner__name: String!
   modified_by__name: String!
+  parent__name: String
   label: String!
-  action_type: String!
+  action_type: DocTypeActionActionTypeSelectOptions!
   action: String!
   group: String
   hidden: Int
   custom: Int
 }
 
-enum DocTypeActionSortField {
-  NAME
-  CREATION
-  MODIFIED
-}
-
-input DocTypeActionSortingInput {
-  direction: SortDirection!
-  field: DocTypeActionSortField!
-}
-
-type DocTypeActionCountableEdge {
-  cursor: String!
-  node: DocTypeAction!
-}
-
-type DocTypeActionCountableConnection {
-  pageInfo: PageInfo!
-  totalCount: Int
-  edges: [DocTypeActionCountableEdge!]!
-}
-
-extend type Query {
-  DocTypeAction(name: String!): DocTypeAction!
-  DocTypeActions(filter: [DBFilterInput], sortBy: DocTypeActionSortingInput, before: String, after: String, first: Int, last: Int): DocTypeActionCountableConnection!
+enum DocTypeActionActionTypeSelectOptions {
+  SERVER_ACTION
+  ROUTE
 }
