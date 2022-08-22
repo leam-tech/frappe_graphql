@@ -6,13 +6,13 @@ type File implements BaseDocType {
   modified: String
   modified_by: User!
   parent: BaseDocType
-  parent__name: String
   parentfield: String
   parenttype: String
   idx: Int
   docstatus: Int
   owner__name: String!
   modified_by__name: String!
+  parent__name: String
   file_name: String
   is_private: Int
   is_home_folder: Int

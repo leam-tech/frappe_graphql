@@ -6,15 +6,15 @@ type DocField implements BaseDocType {
   modified: String
   modified_by: User!
   parent: BaseDocType
-  parent__name: String
   parentfield: String
   parenttype: String
   idx: Int
   docstatus: Int
   owner__name: String!
   modified_by__name: String!
+  parent__name: String
   label: String
-  fieldtype: String!
+  fieldtype: DocFieldTypeSelectOptions!
   fieldname: String
   precision: String
   length: Int
@@ -63,32 +63,44 @@ type DocField implements BaseDocType {
   oldfieldtype: String
 }
 
-enum DocFieldSortField {
-  NAME
-  CREATION
-  MODIFIED
-  LABEL
-  FIELDTYPE
-  FIELDNAME
-}
-
-input DocFieldSortingInput {
-  direction: SortDirection!
-  field: DocFieldSortField!
-}
-
-type DocFieldCountableEdge {
-  cursor: String!
-  node: DocField!
-}
-
-type DocFieldCountableConnection {
-  pageInfo: PageInfo!
-  totalCount: Int
-  edges: [DocFieldCountableEdge!]!
-}
-
-extend type Query {
-  DocField(name: String!): DocField!
-  DocFields(filter: [DBFilterInput], sortBy: DocFieldSortingInput, before: String, after: String, first: Int, last: Int): DocFieldCountableConnection!
+enum DocFieldTypeSelectOptions {
+  ATTACH
+  ATTACH_IMAGE
+  BARCODE
+  BUTTON
+  CHECK
+  CODE
+  COLOR
+  COLUMN_BREAK
+  CURRENCY
+  DATA
+  DATE
+  DATETIME
+  DURATION
+  DYNAMIC_LINK
+  FLOAT
+  FOLD
+  GEOLOCATION
+  HEADING
+  HTML
+  HTML_EDITOR
+  ICON
+  IMAGE
+  INT
+  LINK
+  LONG_TEXT
+  MARKDOWN_EDITOR
+  PASSWORD
+  PERCENT
+  READ_ONLY
+  RATING
+  SECTION_BREAK
+  SELECT
+  SMALL_TEXT
+  TABLE
+  TABLE_MULTISELECT
+  TEXT
+  TEXT_EDITOR
+  TIME
+  SIGNATURE
 }

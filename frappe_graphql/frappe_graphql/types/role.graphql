@@ -6,23 +6,23 @@ type Role implements BaseDocType {
   modified: String
   modified_by: User!
   parent: BaseDocType
-  parent__name: String
   parentfield: String
   parenttype: String
   idx: Int
   docstatus: Int
   owner__name: String!
   modified_by__name: String!
+  parent__name: String
   role_name: String!
   home_page: String
   restrict_to_domain: Domain
   restrict_to_domain__name: String
   disabled: Int
+  is_custom: Int
   desk_access: Int
   two_factor_auth: Int
   search_bar: Int
   notifications: Int
-  chat: Int
   list_sidebar: Int
   bulk_actions: Int
   view_switcher: Int
