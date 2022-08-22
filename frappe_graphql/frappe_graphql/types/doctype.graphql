@@ -26,9 +26,11 @@ type DocType implements BaseDocType {
   track_views: Int
   custom: Int
   beta: Int
+  is_virtual: Int
   fields: [DocField!]!
   autoname: String
   name_case: DocTypeNameCaseSelectOptions
+  allow_rename: Int
   description: String
   documentation: String
   image_field: String
@@ -37,7 +39,6 @@ type DocType implements BaseDocType {
   max_attachments: Int
   hide_toolbar: Int
   allow_copy: Int
-  allow_rename: Int
   allow_import: Int
   allow_events_in_timeline: Int
   allow_auto_repeat: Int
@@ -51,6 +52,7 @@ type DocType implements BaseDocType {
   color: String
   show_preview_popup: Int
   show_name_in_global_search: Int
+  default_email_template__name: String
   email_append_to: Int
   sender_field: String
   subject_field: String
