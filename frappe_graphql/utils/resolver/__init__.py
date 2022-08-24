@@ -1,4 +1,4 @@
-from graphql import GraphQLSchema, GraphQLType
+from graphql import GraphQLSchema, GraphQLType, GraphQLResolveInfo
 
 import frappe
 from frappe.model.meta import Meta
@@ -24,6 +24,7 @@ def setup_default_resolvers(schema: GraphQLSchema):
         meta = frappe.get_meta(dt)
 
         setup_frappe_df(meta, gql_type)
+        setup_doctype_resolver(meta, gql_type)
         setup_link_field_resolvers(meta, gql_type)
         setup_select_field_resolvers(meta, gql_type)
         setup_child_table_resolvers(meta, gql_type)
@@ -46,6 +47,21 @@ def setup_frappe_df(meta: Meta, gql_type: GraphQLType):
             continue
 
         gql_type.fields[df.fieldname].frappe_df = df
+
+
+def setup_doctype_resolver(meta: Meta, gql_type: GraphQLType):
+    """
+    Sets custom resolver to BaseDocument.doctype field
+    """
+    if "doctype" not in gql_type.fields:
+        return
+
+    gql_type.fields["doctype"].resolve = _doctype_resolver
+
+
+def _doctype_resolver(obj, info: GraphQLResolveInfo, **kwargs):
+    dt = get_singular_doctype(info.parent_type.name)
+    return dt
 
 
 def setup_select_field_resolvers(meta: Meta, gql_type: GraphQLType):

@@ -152,7 +152,7 @@ class CursorPaginator(object):
 
     def get_fields_to_fetch(self, doctype, filters, sorting_fields):
         fieldnames = get_allowed_fieldnames_for_doctype(doctype)
-        return list(set(fieldnames + [f"SUBSTR(\".{doctype}\", 2) as doctype"] + sorting_fields))
+        return list(set(fieldnames + sorting_fields))
 
     def get_sort_args(self, sorting_input=None):
         sort_dir = self.default_sorting_direction if self.default_sorting_direction in (

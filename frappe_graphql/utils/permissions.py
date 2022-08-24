@@ -8,7 +8,7 @@ def get_allowed_fieldnames_for_doctype(doctype: str, parent_doctype: str = None)
     Gets a list of fieldnames that's allowed for the current User to
     read on the specified doctype. This includes default_fields
     """
-    fieldnames = list(default_fields) + ["\"{}\" as `doctype`".format(doctype)]
+    fieldnames = list(default_fields)
     fieldnames.remove("doctype")
 
     meta = frappe.get_meta(doctype)

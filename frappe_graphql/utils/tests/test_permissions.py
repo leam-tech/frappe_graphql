@@ -24,7 +24,6 @@ class TestGetAllowedFieldNameForDocType(TestCase):
             fieldnames,
             [x.fieldname for x in meta.fields if x.fieldtype not in no_value_fields]
             + [x for x in default_fields if x != "doctype"]
-            + ["\"{}\" as doctype".format(meta.name)]
         )
 
     def test_permlevels_on_user(self):
@@ -42,7 +41,6 @@ class TestGetAllowedFieldNameForDocType(TestCase):
             [x.fieldname for x in user_meta.fields
                 if x.permlevel == 1 and x.fieldtype not in no_value_fields]
             + [x for x in default_fields if x != "doctype"]
-            + ["\"{}\" as doctype".format(user_meta.name)]
         )
 
         # Clear meta_cache for User doctype
@@ -55,7 +53,6 @@ class TestGetAllowedFieldNameForDocType(TestCase):
             fieldnames,
             [x.fieldname for x in meta.fields if x.fieldtype not in no_value_fields]
             + [x for x in default_fields if x != "doctype"]
-            + ["\"{}\" as doctype".format(meta.name)]
         )
 
     def test_on_child_doctype_with_no_parent_doctype(self):
