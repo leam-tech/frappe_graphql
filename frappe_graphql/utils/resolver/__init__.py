@@ -5,6 +5,7 @@ from frappe.model.meta import Meta
 
 from .root_query import setup_root_query_resolvers
 from .link_field import setup_link_field_resolvers
+from .select_fields import setup_select_field_resolvers
 from .child_tables import setup_child_table_resolvers
 from .translate import setup_translatable_resolvers
 from .utils import get_singular_doctype
@@ -62,7 +63,3 @@ def setup_doctype_resolver(meta: Meta, gql_type: GraphQLType):
 def _doctype_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     dt = get_singular_doctype(info.parent_type.name)
     return dt
-
-
-def setup_select_field_resolvers(meta: Meta, gql_type: GraphQLType):
-    pass
