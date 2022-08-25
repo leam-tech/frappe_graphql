@@ -10,6 +10,10 @@ def setup_translatable_resolvers(meta: Meta, gql_type: GraphQLType):
             continue
 
         gql_field = gql_type.fields[df_fieldname]
+
+        if gql_field.resolve:
+            continue
+
         gql_field.resolve = _translatable_resolver
 
 
