@@ -29,6 +29,9 @@ def get_allowed_fieldnames_for_doctype(doctype: str, parent_doctype: str = None)
 
 
 def _get_permlevel_read_access(meta: Meta):
+    if meta.istable:
+        return [0]
+
     ptype = "read"
     _has_access_to = []
     roles = frappe.get_roles()
