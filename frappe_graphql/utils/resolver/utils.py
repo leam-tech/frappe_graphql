@@ -48,3 +48,33 @@ def get_plural_doctype(name):
 
 def get_frappe_df_from_resolve_info(info: GraphQLResolveInfo):
     return getattr(info.parent_type.fields[info.field_name], "frappe_df", None)
+
+
+def get_default_fields_docfield():
+    """
+    from frappe.model import default_fields are included on all DocTypes
+    But, DocMeta do not include them in the fields
+    """
+    from frappe.model import default_fields
+
+    def _get_default_field_df(fieldname):
+        df = frappe._dict(
+            fieldname=fieldname,
+            fieldtype="Data"
+        )
+        if fieldname in ("owner", "modified_by"):
+            df.fieldtype = "Link"
+            df.options = "User"
+
+        if fieldname == "parent":
+            df.fieldtype = "Dynamic Link"
+            df.options = "parenttype"
+
+        if fieldname in ["docstatus", "idx"]:
+            df.fieldtype = "Int"
+
+        return df
+
+    return [
+        _get_default_field_df(x) for x in default_fields
+    ]

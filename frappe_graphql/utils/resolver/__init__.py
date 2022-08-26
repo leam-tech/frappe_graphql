@@ -43,7 +43,9 @@ def setup_frappe_df(meta: Meta, gql_type: GraphQLType):
     - Child Tables
     - Checking if the leaf-node is translatable
     """
-    for df in meta.fields:
+    from .utils import get_default_fields_docfield
+    fields = meta.fields + get_default_fields_docfield()
+    for df in fields:
         if df.fieldname not in gql_type.fields:
             continue
 

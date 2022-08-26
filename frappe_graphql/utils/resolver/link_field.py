@@ -72,23 +72,9 @@ def _resolve_link_name_field(obj, info: GraphQLResolveInfo, **kwargs):
 
 
 def _get_default_field_links():
-    def _get_default_field_df(fieldname):
-        df = frappe._dict(
-            fieldname=fieldname,
-            fieldtype="Data"
-        )
-        if fieldname in ("owner", "modified_by"):
-            df.fieldtype = "Link"
-            df.options = "User"
-
-        if fieldname == "parent":
-            df.fieldtype = "Dynamic Link"
-            df.options = "parenttype"
-
-        return df
+    from .utils import get_default_fields_docfield
 
     return [
-        _get_default_field_df(x) for x in [
-            "owner", "modified_by", "parent"
-        ]
+        x for x in get_default_fields_docfield()
+        if x.fieldtype in ["Link", "Dynamic Link"]
     ]
