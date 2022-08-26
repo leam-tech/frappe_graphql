@@ -1,3 +1,4 @@
+from typing import List
 import frappe
 from frappe.model import default_fields, no_value_fields
 from frappe.model.meta import Meta
@@ -8,6 +9,10 @@ def get_allowed_fieldnames_for_doctype(doctype: str, parent_doctype: str = None)
     Gets a list of fieldnames that's allowed for the current User to
     read on the specified doctype. This includes default_fields
     """
+    _from_locals = _get_allowed_fieldnames_from_locals(doctype, parent_doctype)
+    if _from_locals is not None:
+        return _from_locals
+
     fieldnames = list(default_fields)
     fieldnames.remove("doctype")
 
@@ -24,6 +29,12 @@ def get_allowed_fieldnames_for_doctype(doctype: str, parent_doctype: str = None)
             continue
 
         fieldnames.append(df.fieldname)
+
+    _set_allowed_fieldnames_to_locals(
+        allowed_fields=fieldnames,
+        doctype=doctype,
+        parent_doctype=parent_doctype
+    )
 
     return fieldnames
 
@@ -45,3 +56,30 @@ def _get_permlevel_read_access(meta: Meta):
         _has_access_to.append(perm.get("permlevel"))
 
     return _has_access_to
+
+
+def _get_allowed_fieldnames_from_locals(doctype: str, parent_doctype: str = None):
+
+    if not hasattr(frappe.local, "permlevel_fields"):
+        frappe.local.permlevel_fields = dict()
+
+    k = doctype
+    if parent_doctype:
+        k = (doctype, parent_doctype)
+
+    return frappe.local.permlevel_fields.get(k)
+
+
+def _set_allowed_fieldnames_to_locals(
+        allowed_fields: List[str],
+        doctype: str,
+        parent_doctype: str = None):
+
+    if not hasattr(frappe.local, "permlevel_fields"):
+        frappe.local.permlevel_fields = dict()
+
+    k = doctype
+    if parent_doctype:
+        k = (doctype, parent_doctype)
+
+    frappe.local.permlevel_fields[k] = allowed_fields
