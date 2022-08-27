@@ -1,13 +1,17 @@
 from graphql.pyutils import FrozenDict, FrozenList
 
 
-def unfreeze(obj, ignore_types=[]):
+def unfreeze(obj, ignore_types=None):
     """
     FrozenDicts and FrozenLists come up in graphql generated ast
     They raise errors while pickling.
 
     Recursive Approach was not taken since it is very easy to exceed the recursion limit
     """
+
+    if not ignore_types:
+        ignore_types = []
+
     if obj is None:
         return obj
 
