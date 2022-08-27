@@ -4,7 +4,7 @@ import frappe
 from frappe.model.meta import Meta
 
 from .dataloaders import get_doctype_dataloader
-from .utils import get_frappe_df_from_resolve_info
+from .utils import get_frappe_df_from_resolve_info, field_permlevel_check
 
 
 def setup_link_field_resolvers(meta: Meta, gql_type: GraphQLType):
@@ -34,12 +34,18 @@ def setup_link_field_resolvers(meta: Meta, gql_type: GraphQLType):
         gql_type.fields[_name_df].resolve = _resolve_link_name_field
 
 
+@field_permlevel_check
 def _resolve_link_field(obj, info: GraphQLResolveInfo, **kwargs):
     df = get_frappe_df_from_resolve_info(info)
     if not df:
         return None
 
     dt = df.options
+    if not frappe.has_permission(dt, ptype="read"):
+        raise frappe.PermissionError(frappe._(
+            "You do not have read permission on {0}"
+        ).format(dt))
+
     dn = obj.get(info.field_name)
 
     if not (dt and dn):

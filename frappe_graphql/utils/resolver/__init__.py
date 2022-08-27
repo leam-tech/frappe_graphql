@@ -26,6 +26,7 @@ def setup_default_resolvers(schema: GraphQLSchema):
 
         setup_frappe_df(meta, gql_type)
         setup_doctype_resolver(meta, gql_type)
+        setup_mandatory_resolver(meta, gql_type)
         setup_link_field_resolvers(meta, gql_type)
         setup_select_field_resolvers(meta, gql_type)
         setup_child_table_resolvers(meta, gql_type)
@@ -60,6 +61,31 @@ def setup_doctype_resolver(meta: Meta, gql_type: GraphQLType):
         return
 
     gql_type.fields["doctype"].resolve = _doctype_resolver
+
+
+def setup_mandatory_resolver(meta: Meta, gql_type: GraphQLType):
+    """
+    When mandatory fields return None, it might be due to restricted permlevel access
+    So when we find a Null value being returned and the field requested is restricted to
+    the current User, we raise Permission Error instead of:
+
+        "Cannot return null for non-nullable field ..."
+
+    """
+    from .utils import field_permlevel_check
+
+    @field_permlevel_check
+    def dummy_resolver(obj, info: GraphQLResolveInfo, **kwargs):
+        return obj.get(info.field_name)
+
+    for df in meta.fields:
+        if not df.reqd:
+            continue
+
+        if df.fieldname not in gql_type.fields:
+            continue
+
+        gql_type.fields[df.fieldname].resolve = dummy_resolver
 
 
 def _doctype_resolver(obj, info: GraphQLResolveInfo, **kwargs):
