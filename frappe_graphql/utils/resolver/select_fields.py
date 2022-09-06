@@ -4,7 +4,7 @@ import frappe
 from frappe.model.meta import Meta
 
 from .translate import _translatable_resolver
-from .utils import get_frappe_df_from_resolve_info, field_permlevel_check
+from .utils import get_frappe_df_from_resolve_info
 
 
 def setup_select_field_resolvers(meta: Meta, gql_type: GraphQLType):
@@ -18,7 +18,6 @@ def setup_select_field_resolvers(meta: Meta, gql_type: GraphQLType):
         gql_field.resolve = _select_field_resolver
 
 
-@field_permlevel_check
 def _select_field_resolver(obj, info: GraphQLResolveInfo, **kwargs):
 
     df = get_frappe_df_from_resolve_info(info)

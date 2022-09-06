@@ -26,11 +26,13 @@ def setup_default_resolvers(schema: GraphQLSchema):
 
         setup_frappe_df(meta, gql_type)
         setup_doctype_resolver(meta, gql_type)
-        setup_mandatory_resolver(meta, gql_type)
         setup_link_field_resolvers(meta, gql_type)
         setup_select_field_resolvers(meta, gql_type)
         setup_child_table_resolvers(meta, gql_type)
         setup_translatable_resolvers(meta, gql_type)
+
+        # Wrap all the resolvers set above with a mandatory-checker
+        setup_mandatory_resolver(meta, gql_type)
 
         for cmd in doctype_resolver_processors:
             frappe.get_attr(cmd)(meta=meta, gql_type=gql_type)
@@ -85,7 +87,11 @@ def setup_mandatory_resolver(meta: Meta, gql_type: GraphQLType):
         if df.fieldname not in gql_type.fields:
             continue
 
-        gql_type.fields[df.fieldname].resolve = dummy_resolver
+        gql_field = gql_type.fields[df.fieldname]
+        if gql_field.resolve:
+            gql_field.resolve = field_permlevel_check(gql_field.resolve)
+        else:
+            gql_field.resolve = dummy_resolver
 
 
 def _doctype_resolver(obj, info: GraphQLResolveInfo, **kwargs):
