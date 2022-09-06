@@ -74,11 +74,8 @@ def setup_mandatory_resolver(meta: Meta, gql_type: GraphQLType):
         "Cannot return null for non-nullable field ..."
 
     """
+    from graphql.execution.execute import default_field_resolver
     from .utils import field_permlevel_check
-
-    @field_permlevel_check
-    def dummy_resolver(obj, info: GraphQLResolveInfo, **kwargs):
-        return obj.get(info.field_name)
 
     for df in meta.fields:
         if not df.reqd:
@@ -91,7 +88,7 @@ def setup_mandatory_resolver(meta: Meta, gql_type: GraphQLType):
         if gql_field.resolve:
             gql_field.resolve = field_permlevel_check(gql_field.resolve)
         else:
-            gql_field.resolve = dummy_resolver
+            gql_field.resolve = field_permlevel_check(default_field_resolver)
 
 
 def _doctype_resolver(obj, info: GraphQLResolveInfo, **kwargs):
