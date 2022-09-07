@@ -1,4 +1,4 @@
-from graphql import GraphQLSchema, GraphQLType, GraphQLResolveInfo
+from graphql import GraphQLSchema, GraphQLType, GraphQLResolveInfo, GraphQLNonNull
 
 import frappe
 from frappe.model.meta import Meta
@@ -85,6 +85,9 @@ def setup_mandatory_resolver(meta: Meta, gql_type: GraphQLType):
             continue
 
         gql_field = gql_type.fields[df.fieldname]
+        if not isinstance(gql_field.type, GraphQLNonNull):
+            continue
+
         if gql_field.resolve:
             gql_field.resolve = field_permlevel_check(gql_field.resolve)
         else:
