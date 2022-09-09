@@ -1,6 +1,5 @@
 from graphql import GraphQLResolveInfo, GraphQLType, is_scalar_type
 
-import frappe
 from frappe.model.meta import Meta
 
 from .dataloaders import get_doctype_dataloader
