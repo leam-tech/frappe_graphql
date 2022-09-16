@@ -259,10 +259,11 @@ def get_select_docfield_enum_name(doctype, docfield, generated_enums=None):
         f"{doctype}{(docfield.label or docfield.fieldname).title()}SelectOptions"
         .replace(" ", ""))
 
-    if name in generated_enums.values():
-        name = remove_reserved_characters(
-            f"{doctype}{(docfield.fieldname).title()}SelectOptions"
-            .replace(" ", ""))
+    if hasattr(generated_enums,'values'):
+        if name in generated_enums.values():
+            name = remove_reserved_characters(
+                f"{doctype}{(docfield.fieldname).title()}SelectOptions"
+                .replace(" ", ""))
 
     if generated_enums is not None:
         if docfield in generated_enums:
