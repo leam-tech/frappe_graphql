@@ -23,11 +23,12 @@ def _select_field_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     df = get_frappe_df_from_resolve_info(info)
     return_type = info.return_type
 
+    value = obj.get(info.field_name)
     if isinstance(return_type, GraphQLNonNull):
         return_type = return_type.of_type
 
     if isinstance(return_type, GraphQLEnumType):
-        return frappe.scrub(obj.get(info.field_name)).upper()
+        return frappe.scrub(value).upper()
 
     if df and df.translatable:
         return _translatable_resolver(obj, info, **kwargs)

@@ -39,6 +39,23 @@ def get_allowed_fieldnames_for_doctype(doctype: str, parent_doctype: str = None)
     return fieldnames
 
 
+def is_field_permlevel_restricted_for_doctype(
+        fieldname: str, doctype: str, parent_doctype: str = None):
+    """
+    Returns a boolean when the given field is restricted for the current User under permlevel
+    """
+    meta = frappe.get_meta(doctype)
+    if meta.get_field(fieldname) is None:
+        return False
+
+    allowed_fieldnames = get_allowed_fieldnames_for_doctype(
+        doctype=doctype, parent_doctype=parent_doctype)
+    if fieldname not in allowed_fieldnames:
+        return True
+
+    return False
+
+
 def _get_permlevel_read_access(meta: Meta):
     if meta.istable:
         return [0]
