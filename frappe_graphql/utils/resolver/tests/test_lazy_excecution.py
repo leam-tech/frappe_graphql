@@ -1,5 +1,7 @@
 import unittest
 from unittest.mock import Mock
+from frappe_graphql.utils.execution.execution_context import DeferredExecutionContext
+from frappe_graphql.utils.execution.dataloader import DataLoader
 from graphql import (
     GraphQLSchema,
     GraphQLObjectType,
@@ -9,45 +11,6 @@ from graphql import (
     GraphQLList,
     graphql_sync,
 )
-from graphql.execution.execute import ExecutionContext
-
-
-class DataLoader:
-    class LazyValue:
-        def __init__(self, key, dataloader):
-            self.key = key
-            self.dataloader = dataloader
-
-        def get(self):
-            return self.dataloader.get(self.key)
-
-    def __init__(self, load_fn):
-        self.load_fn = load_fn
-        self.pending_ids = set()
-        self.loaded_ids = {}
-
-    def load(self, key):
-        lazy_value = DataLoader.LazyValue(key, self)
-        self.pending_ids.add(key)
-
-        return lazy_value
-
-    def get(self, key):
-        if key in self.loaded_ids:
-            return self.loaded_ids.get(key)
-
-        keys = self.pending_ids
-        values = self.load_fn(keys)
-        for k, value in zip(keys, values):
-            self.loaded_ids[k] = value
-
-        self.pending_ids.clear()
-        return self.loaded_ids[key]
-
-
-class CustomExecutionClass(ExecutionContext):
-    def is_lazy(self, value):
-        return isinstance(value, DataLoader.LazyValue)
 
 
 class TestLazyExecution(unittest.TestCase):
@@ -65,9 +28,9 @@ class TestLazyExecution(unittest.TestCase):
             return [NAMES[key] for key in keys]
 
         mock_load_fn = Mock(wraps=load_fn)
-        dataloader = DataLoader(mock_load_fn)
+        dataloader = DataLoader(load_fn=mock_load_fn)
 
-        def resolve_name(root, info, key):
+        def name_resolver(root, info, key):
             return dataloader.load(key)
 
         schema = GraphQLSchema(
@@ -79,7 +42,7 @@ class TestLazyExecution(unittest.TestCase):
                         args={
                             "key": GraphQLArgument(GraphQLString),
                         },
-                        resolve=resolve_name,
+                        resolve=name_resolver,
                     )
                 },
             )
@@ -93,7 +56,7 @@ class TestLazyExecution(unittest.TestCase):
                 name2: name(key: "2")
             }
             """,
-            execution_context_class=CustomExecutionClass,
+            execution_context_class=DeferredExecutionContext,
         )
 
         self.assertIsNone(result.errors)
@@ -170,7 +133,7 @@ class TestLazyExecution(unittest.TestCase):
                 }
             }
             """,
-            execution_context_class=CustomExecutionClass,
+            execution_context_class=DeferredExecutionContext,
         )
 
         self.assertIsNone(result.errors)
@@ -252,7 +215,7 @@ class TestLazyExecution(unittest.TestCase):
                 }
             }
             """,
-            execution_context_class=CustomExecutionClass,
+            execution_context_class=DeferredExecutionContext,
         )
 
         self.assertIsNone(result.errors)
@@ -277,6 +240,3 @@ class TestLazyExecution(unittest.TestCase):
             ],
         })
         self.assertEqual(mock_load_fn.call_count, 1)
-
-    def test_lazy_execution_errors(self):
-        raise NotImplementedError()
