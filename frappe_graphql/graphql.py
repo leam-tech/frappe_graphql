@@ -1,8 +1,9 @@
+from graphql_sync_dataloaders import DeferredExecutionContext
+
 import frappe
 import graphql
 
 from frappe_graphql.utils.loader import get_schema
-from frappe_graphql.utils.execution import DeferredExecutionContext
 
 
 @frappe.whitelist(allow_guest=True)

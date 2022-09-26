@@ -1,5 +1,5 @@
 import frappe
-from frappe_graphql.utils.execution import DataLoader
+from graphql_sync_dataloaders import SyncDataLoader
 
 
 def get_loader_from_locals(key: str):
@@ -10,7 +10,7 @@ def get_loader_from_locals(key: str):
         return frappe.local.dataloaders.get(key)
 
 
-def set_loader_in_locals(key: str, loader: DataLoader):
+def set_loader_in_locals(key: str, loader: SyncDataLoader):
     if not hasattr(frappe.local, "dataloaders"):
         frappe.local.dataloaders = frappe._dict()
 
