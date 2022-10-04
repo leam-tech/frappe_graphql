@@ -57,7 +57,7 @@ class TestDocumentResolver(unittest.TestCase):
 
         admin = r.get("data").get("User")
         self.assertEqual(admin.get("doctype"), "User")
-        self.assertEqual(admin.get("name"), "administrator")
+        self.assertEqual(admin.get("name"), "Administrator")
         self.assertEqual(admin.get("full_name"), "Administrator")
 
     """
@@ -184,6 +184,14 @@ class TestDocumentResolver(unittest.TestCase):
     """
 
     def test_simple_select(self):
+        # Make sure the field is a String field
+        schema = get_schema()
+        user_type = schema.type_map.get("User")
+        original_type = None
+        if not isinstance(user_type.fields.get("desk_theme").type, GraphQLScalarType):
+            original_type = user_type.fields.get("desk_theme").type
+            user_type.fields.get("desk_theme").type = GraphQLString
+
         r = execute(
             query="""
             query FetchAdmin($user: String!) {
@@ -202,6 +210,10 @@ class TestDocumentResolver(unittest.TestCase):
         admin = r.get("data").get("User")
 
         self.assertIn(admin.get("desk_theme"), ["Light", "Dark"])
+
+        # Set back the original type
+        if original_type is not None:
+            user_type.fields.get("desk_theme").type = original_type
 
     def test_enum_select(self):
         """
@@ -243,87 +255,6 @@ class TestDocumentResolver(unittest.TestCase):
         # Set back the original type
         if original_type is not None:
             user_type.fields.get("desk_theme").type = original_type
-
-    """
-    IGNORE_PERMS_TESTS
-    """
-
-    def test_ignore_perms(self):
-        administrator = frappe.get_doc("User", "administrator")
-        frappe.set_user("Guest")
-        schema = get_schema()
-        schema.query_type.fields["GetAdmin"] = GraphQLField(
-            type_=schema.type_map["User"],
-            resolve=lambda obj, info, **kwargs: dict(
-                doctype="User", name="Administrator", __ignore_perms=True)
-        )
-
-        r = execute(
-            query="""
-            {
-                GetAdmin {
-                    email
-                    full_name
-                    desk_theme
-                    roles {
-                        role__name
-                    }
-                }
-            }
-            """
-        )
-
-        self.assertIsNone(r.get("errors"))
-        admin = frappe._dict(r.get("data").get("GetAdmin"))
-
-        self.assertEqual(admin.email, administrator.email)
-        self.assertEqual(len(admin.roles), len(administrator.roles))
-
-    def test_ignore_perms_child_doc_and_link_field(self):
-        """
-        Has Role {
-            __ignore_perms: 1
-            role__name
-            role {
-                should be readable without perm errors
-            }
-        }
-        """
-        frappe.set_user("Guest")
-        has_role_name = frappe.db.get_value("Has Role", {})
-
-        schema = get_schema()
-        schema.query_type.fields["GetHasRole"] = GraphQLField(
-            type_=schema.type_map["HasRole"],
-            args=dict(
-                name=GraphQLString
-            ),
-            resolve=lambda obj, info, **kwargs: dict(
-                doctype="Has Role", name=kwargs.get("name"), __ignore_perms=True)
-        )
-
-        r = execute(
-            query="""
-            query GetHasRole($name: String!) {
-                GetHasRole(name: $name) {
-                    name
-                    doctype
-                    role__name
-                    role {
-                        name
-                    }
-                }
-            }
-            """,
-            variables={
-                "name": has_role_name
-            }
-        )
-        self.assertIsNone(r.get("errors"))
-
-        has_role = frappe._dict(r.get("data").get("GetHasRole"))
-        self.assertEqual(has_role.name, has_role_name)
-        self.assertEqual(has_role.role__name, has_role.role.get("name"))
 
     """
     DB_DELETED_DOC_TESTS
