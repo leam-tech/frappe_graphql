@@ -2,10 +2,8 @@ import base64
 from graphql import GraphQLResolveInfo, GraphQLError
 
 import frappe
-from frappe_graphql.utils.generate_sdl.doctype import format_doctype
-
 from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
-from frappe_graphql.utils.selected_field_names import selected_field_names_fast
+from frappe_graphql.utils.selected_field_names import get_selected_fields_for_cursor_paginator_node
 
 
 class CursorPaginator(object):
@@ -153,19 +151,13 @@ class CursorPaginator(object):
         )
 
     def get_fields_to_fetch(self, doctype, filters, sorting_fields):
-        selection_set = \
-            self.resolve_info.field_nodes[0].selection_set.selections[1].selection_set.selections[
-                0].selection_set
-        field_to_fetch = selected_field_names_fast(selection_set, self.resolve_info.context,
-                                                   format_doctype(doctype))
-        fieldnames = get_allowed_fieldnames_for_doctype(doctype)
-        return list(
-            set([field.replace('__name', '') for field in field_to_fetch if
-                 field.replace('__name', '') in fieldnames] + sorting_fields))
+        selected_fields = set(get_selected_fields_for_cursor_paginator_node(self.resolve_info))
+        fieldnames = set(get_allowed_fieldnames_for_doctype(doctype))
+        return list(set(list(selected_fields.intersection(fieldnames)) + sorting_fields))
 
     def get_sort_args(self, sorting_input=None):
         sort_dir = self.default_sorting_direction if self.default_sorting_direction in (
-        "asc", "desc") else "desc"
+            "asc", "desc") else "desc"
         if not self.default_sorting_fields:
             meta = frappe.get_meta(self.doctype)
             if meta.istable:
