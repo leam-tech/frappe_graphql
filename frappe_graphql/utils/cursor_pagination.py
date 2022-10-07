@@ -5,6 +5,7 @@ from typing import List
 from graphql import GraphQLResolveInfo, GraphQLError
 
 import frappe
+from frappe_graphql.utils.depth_limit_validator import is_introspection_key
 from frappe_graphql.utils.extract_requested_fields_resolver_info import get_fields
 from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
 
@@ -333,19 +334,18 @@ def get_selected_fields_for_cursor_paginator_node(info: GraphQLResolveInfo):
 
     We are only concerned with the fields we are fetching from the db
     Note:
-        => We will be avoiding __schema, __type, and __typename
+        => We will be avoiding introspection keys
         => We will not be sending __name as we define these link fields
     """
     import jmespath
     from jmespath.exceptions import JMESPathTypeError
 
-    black_listed_fields = ("__schema", "__type", "__typename")
     expression = jmespath.compile("edges.node.keys(@)")
     fields = get_fields(info)
     with contextlib.suppress(JMESPathTypeError):
         # maybe the following can be done in jmespath =)
         return [field.replace('__name', '') for field in expression.search(fields) or [] if
-                field not in black_listed_fields]
+                not is_introspection_key(field)]
     return []
 
 
