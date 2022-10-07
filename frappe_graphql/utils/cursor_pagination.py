@@ -1,9 +1,12 @@
 import base64
+import contextlib
+from typing import List
+
 from graphql import GraphQLResolveInfo, GraphQLError
 
 import frappe
+from frappe_graphql.utils.extract_requested_fields_resolver_info import get_fields
 from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
-from frappe_graphql.utils.selected_field_names import get_selected_fields_for_cursor_paginator_node
 
 
 class CursorPaginator(object):
@@ -151,9 +154,7 @@ class CursorPaginator(object):
         )
 
     def get_fields_to_fetch(self, doctype, filters, sorting_fields):
-        selected_fields = set(get_selected_fields_for_cursor_paginator_node(self.resolve_info))
-        fieldnames = set(get_allowed_fieldnames_for_doctype(doctype))
-        return list(set(list(selected_fields.intersection(fieldnames)) + sorting_fields))
+        return get_fields_cursor_paginator(doctype, self.resolve_info, sorting_fields)
 
     def get_sort_args(self, sorting_input=None):
         sort_dir = self.default_sorting_direction if self.default_sorting_direction in (
@@ -323,3 +324,46 @@ class CursorPaginator(object):
 
     def from_cursor(self, cursor):
         return frappe.parse_json(frappe.safe_decode(base64.b64decode(cursor)))
+
+
+def get_selected_fields_for_cursor_paginator_node(info: GraphQLResolveInfo):
+    """
+    we know how the structure looks like based on the specs
+    https://relay.dev/graphql/connections.htm
+
+    We are only concerned with the fields we are fetching from the db
+    Note:
+        => We will be avoiding __schema, __type, and __typename
+        => We will not be sending __name as we define these link fields
+    """
+    import jmespath
+    from jmespath.exceptions import JMESPathTypeError
+
+    black_listed_fields = ("__schema", "__type", "__typename")
+    expression = jmespath.compile("edges.node.keys(@)")
+    fields = get_fields(info)
+    with contextlib.suppress(JMESPathTypeError):
+        # maybe the following can be done in jmespath =)
+        return [field.replace('__name', '') for field in expression.search(fields) or [] if
+                field not in black_listed_fields]
+    return []
+
+
+def extract_field_node_from_cursor_paginator(info: GraphQLResolveInfo) -> dict:
+    """
+    Basically the node which the user specified what fields they need..
+    """
+    import jmespath
+    expression = jmespath.compile(
+        "selection_set.selections[?name.value == 'edges'] |[0].selection_set.selections[?name.value == 'node'] | [0]")  # noqa
+    return expression.search(info.field_nodes[0].to_dict())
+
+
+def get_fields_cursor_paginator(doctype: str, info: GraphQLResolveInfo,
+                                extra_fields: List[str] = None):
+    """
+    This can be used in our custom CursorPaginator queries
+    """
+    selected_fields = set(get_selected_fields_for_cursor_paginator_node(info))
+    fieldnames = set(get_allowed_fieldnames_for_doctype(doctype))
+    return list(set(list(selected_fields.intersection(fieldnames)) + extra_fields or []))
