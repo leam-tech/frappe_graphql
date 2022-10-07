@@ -1,3 +1,4 @@
+import contextlib
 from graphql import GraphQLResolveInfo
 
 
@@ -37,12 +38,16 @@ def get_selected_fields_for_cursor_paginator_node(info: GraphQLResolveInfo):
         => We will not be sending __name as we define these link fields
     """
     import jmespath
+    from jmespath.exceptions import JMESPathTypeError
+
     black_listed_fields = ("__schema", "__type", "__typename")
     expression = jmespath.compile("edges.node.keys(@)")
     fields = get_fields(info)
-    # maybe the following can be done in jmespath =)
-    return [field.replace('__name', '') for field in expression.search(fields) or [] if
-            field not in black_listed_fields]
+    with contextlib.suppress(JMESPathTypeError):
+        # maybe the following can be done in jmespath =)
+        return [field.replace('__name', '') for field in expression.search(fields) or [] if
+                field not in black_listed_fields]
+    return []
 
 
 def extract_field_node_from_cursor_paginator(info: GraphQLResolveInfo) -> dict:
