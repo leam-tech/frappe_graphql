@@ -1,21 +1,20 @@
 from collections import OrderedDict
 
-from graphql_sync_dataloaders import SyncDataLoader
-
 import frappe
 
 from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
+from .frappe_dataloader import FrappeDataloader
 from .locals import get_loader_from_locals, set_loader_in_locals
 
 
 def get_child_table_loader(child_doctype: str, parent_doctype: str, parentfield: str) \
-        -> SyncDataLoader:
+        -> FrappeDataloader:
     locals_key = (child_doctype, parent_doctype, parentfield)
     loader = get_loader_from_locals(locals_key)
     if loader:
         return loader
 
-    loader = SyncDataLoader(_get_child_table_loader_fn(
+    loader = FrappeDataloader(_get_child_table_loader_fn(
         child_doctype=child_doctype,
         parent_doctype=parent_doctype,
         parentfield=parentfield,
