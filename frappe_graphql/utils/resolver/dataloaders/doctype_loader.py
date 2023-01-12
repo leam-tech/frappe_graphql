@@ -1,16 +1,16 @@
 from typing import List
 import frappe
-from graphql_sync_dataloaders import SyncDataLoader
+from .frappe_dataloader import FrappeDataloader
 from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
 from .locals import get_loader_from_locals, set_loader_in_locals
 
 
-def get_doctype_dataloader(doctype: str) -> SyncDataLoader:
+def get_doctype_dataloader(doctype: str) -> FrappeDataloader:
     loader = get_loader_from_locals(doctype)
     if loader:
         return loader
 
-    loader = SyncDataLoader(_get_document_loader_fn(doctype=doctype))
+    loader = FrappeDataloader(_get_document_loader_fn(doctype=doctype))
     set_loader_in_locals(doctype, loader)
     return loader
 
