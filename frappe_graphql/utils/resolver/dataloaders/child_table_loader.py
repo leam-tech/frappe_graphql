@@ -30,22 +30,15 @@ def _get_child_table_loader_fn(child_doctype: str, parent_doctype: str, parentfi
             parent_doctype=parent_doctype
         )
 
-        select_fields = ", ".join([f"`{x}`" if "`" not in x else x for x in fieldnames])
-
-        rows = frappe.db.sql(f"""
-        SELECT
-            {select_fields}
-        FROM `tab{child_doctype}`
-        WHERE
-            parent IN %(parent_keys)s
-            AND parenttype = %(parenttype)s
-            AND parentfield = %(parentfield)s
-        ORDER BY idx
-        """, dict(
-            parent_keys=keys,
-            parenttype=parent_doctype,
-            parentfield=parentfield,
-        ), as_dict=1)
+        rows = frappe.get_all(
+            doctype=child_doctype,
+            fields=fieldnames,
+            filters=dict(
+                parenttype=parent_doctype,
+                parentfield=parentfield,
+                parent=("in", keys),
+            ),
+            order_by="idx asc")
 
         _results = OrderedDict()
         for k in keys:
