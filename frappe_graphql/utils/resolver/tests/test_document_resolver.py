@@ -262,55 +262,43 @@ class TestDocumentResolver(unittest.TestCase):
 
     def test_deleted_doc_resolution(self):
         d = frappe.get_doc(dict(
-            doctype="User",
-            first_name="Example A",
-            email="example_a@test.com",
-            send_welcome_email=0,
-            roles=[{
-                "role": "System Manager"
-            }]
+            doctype="Role",
+            role_name="Example A",
         )).insert()
 
         d.delete()
 
-        # We cannot call Query.User(name: d.name) now since its deleted
+        # We cannot call Query.Role(name: d.name) now since its deleted
         schema = get_schema()
-        schema.type_map["UserDocInput"] = GraphQLScalarType(
-            name="UserDocInput"
+        schema.type_map["RoleDocInput"] = GraphQLScalarType(
+            name="RoleDocInput"
         )
-        schema.query_type.fields["EchoUser"] = GraphQLField(
-            type_=schema.type_map["User"],
+        schema.query_type.fields["EchoRole"] = GraphQLField(
+            type_=schema.type_map["Role"],
             args=dict(
-                user=GraphQLArgument(
-                    type_=schema.type_map["UserDocInput"]
+                role=GraphQLArgument(
+                    type_=schema.type_map["RoleDocInput"]
                 )
             ),
-            resolve=lambda obj, info, **kwargs: kwargs.get("user")
+            resolve=lambda obj, info, **kwargs: kwargs.get("role")
         )
 
         r = execute(
             query="""
-            query EchoUser($user: UserDocInput!) {
-                EchoUser(user: $user) {
+            query EchoRole($role: RoleDocInput!) {
+                EchoRole(role: $role) {
                     doctype
                     name
-                    email
-                    full_name
-                    roles {
-                        role__name
-                    }
+                    role_name
                 }
             }
             """,
             variables={
-                "user": d
+                "role": d
             }
         )
-        resolved_doc = frappe._dict(r.get("data").get("EchoUser"))
+        resolved_doc = frappe._dict(r.get("data").get("EchoRole"))
 
         self.assertEqual(resolved_doc.doctype, d.doctype)
         self.assertEqual(resolved_doc.name, d.name)
-        self.assertEqual(resolved_doc.email, d.email)
-        self.assertEqual(resolved_doc.full_name, d.full_name)
-        self.assertEqual(len(resolved_doc.roles), 1)
-        self.assertEqual(resolved_doc.roles[0].get("role__name"), "System Manager")
+        self.assertEqual(resolved_doc.role_name, d.role_name)
