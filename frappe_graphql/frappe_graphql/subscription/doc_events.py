@@ -1,7 +1,7 @@
 import frappe
 from graphql import GraphQLSchema, GraphQLResolveInfo
 from frappe_graphql import setup_subscription, get_consumers, notify_consumers, get_schema
-from frappe_graphql.utils.resolver import get_singular_doctype
+from frappe_graphql.utils.resolver.utils import get_singular_doctype
 
 
 def bind(schema: GraphQLSchema):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from .utils.loader import get_schema  # noqa
 from .utils.cursor_pagination import CursorPaginator  # noqa
+from .utils.loader import get_schema  # noqa
 from .utils.exceptions import ERROR_CODED_EXCEPTIONS, GQLExecutionUserError, GQLExecutionUserErrorMultiple  # noqa
 from .utils.roles import REQUIRE_ROLES  # noqa
 from .utils.subscriptions import setup_subscription, get_consumers, notify_consumer, \

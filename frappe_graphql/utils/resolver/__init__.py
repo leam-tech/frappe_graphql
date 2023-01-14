@@ -1,69 +1,99 @@
-from typing import Any
-from graphql import GraphQLObjectType, GraphQLResolveInfo
+from graphql import GraphQLSchema, GraphQLType, GraphQLResolveInfo, GraphQLNonNull
 
 import frappe
-from frappe.model.document import Document
-from frappe.model.meta import is_single
+from frappe.model.meta import Meta
 
-from frappe_graphql import CursorPaginator
-from .document_resolver import document_resolver
-from .utils import get_singular_doctype, get_plural_doctype
+from .root_query import setup_root_query_resolvers
+from .link_field import setup_link_field_resolvers
+from .select_fields import setup_select_field_resolvers
+from .child_tables import setup_child_table_resolvers
+from .translate import setup_translatable_resolvers
+from .utils import get_singular_doctype
 
 
-def default_field_resolver(obj: Any, info: GraphQLResolveInfo, **kwargs):
+def setup_default_resolvers(schema: GraphQLSchema):
+    setup_root_query_resolvers(schema=schema)
 
-    parent_type: GraphQLObjectType = info.parent_type
-    if not isinstance(info.parent_type, GraphQLObjectType):
-        frappe.throw("Invalid GraphQL")
+    doctype_resolver_processors = frappe.get_hooks("doctype_resolver_processors")
 
-    if parent_type.name == "Query":
-        # This section is executed on root query type fields
-        dt = get_singular_doctype(info.field_name)
-        if dt:
-            if is_single(dt):
-                kwargs["name"] = dt
-            elif not frappe.db.exists(dt, kwargs.get("name")):
-                raise frappe.DoesNotExistError(
-                    frappe._("{0} {1} not found").format(frappe._(dt), kwargs.get("name")))
-            return frappe._dict(
-                doctype=dt,
-                name=kwargs.get("name")
-            )
+    # Setup custom resolvers for DocTypes
+    for type_name, gql_type in schema.type_map.items():
+        dt = get_singular_doctype(type_name)
+        if not dt:
+            continue
 
-        plural_doctype = get_plural_doctype(info.field_name)
-        if plural_doctype:
-            frappe.has_permission(doctype=plural_doctype, throw=True)
-            return CursorPaginator(doctype=plural_doctype).resolve(obj, info, **kwargs)
+        meta = frappe.get_meta(dt)
 
-    if not isinstance(obj, (dict, Document)):
-        return None
+        setup_frappe_df(meta, gql_type)
+        setup_doctype_resolver(meta, gql_type)
+        setup_link_field_resolvers(meta, gql_type)
+        setup_select_field_resolvers(meta, gql_type)
+        setup_child_table_resolvers(meta, gql_type)
+        setup_translatable_resolvers(meta, gql_type)
 
-    should_resolve_from_doc = not not (obj.get("name") and (
-        obj.get("doctype") or get_singular_doctype(parent_type.name)))
+        # Wrap all the resolvers set above with a mandatory-checker
+        setup_mandatory_resolver(meta, gql_type)
 
-    # check if requested field can be resolved
-    # - default resolver for simple objects
-    # - these form the resolvers for
-    #   "SET_VALUE_TYPE", "SAVE_DOC_TYPE", "DELETE_DOC_TYPE" mutations
-    if obj.get(info.field_name) is not None:
-        value = obj.get(info.field_name)
-        if isinstance(value, CursorPaginator):
-            return value.resolve(obj, info, **kwargs)
+        for cmd in doctype_resolver_processors:
+            frappe.get_attr(cmd)(meta=meta, gql_type=gql_type)
 
-        if not should_resolve_from_doc:
-            return value
 
-    if should_resolve_from_doc:
-        # this section is executed for Fields on DocType object types.
-        hooks_cmd = frappe.get_hooks("gql_default_document_resolver")
-        resolver = document_resolver
-        if len(hooks_cmd):
-            resolver = frappe.get_attr(hooks_cmd[-1])
+def setup_frappe_df(meta: Meta, gql_type: GraphQLType):
+    """
+    Sets up frappe-DocField on the GraphQLFields as `frappe_df`.
+    This is useful when resolving:
+    - Link / Dynamic Link Fields
+    - Child Tables
+    - Checking if the leaf-node is translatable
+    """
+    from .utils import get_default_fields_docfield
+    fields = meta.fields + get_default_fields_docfield()
+    for df in fields:
+        if df.fieldname not in gql_type.fields:
+            continue
 
-        return resolver(
-            obj=obj,
-            info=info,
-            **kwargs
-        )
+        gql_type.fields[df.fieldname].frappe_df = df
 
-    return None
+
+def setup_doctype_resolver(meta: Meta, gql_type: GraphQLType):
+    """
+    Sets custom resolver to BaseDocument.doctype field
+    """
+    if "doctype" not in gql_type.fields:
+        return
+
+    gql_type.fields["doctype"].resolve = _doctype_resolver
+
+
+def setup_mandatory_resolver(meta: Meta, gql_type: GraphQLType):
+    """
+    When mandatory fields return None, it might be due to restricted permlevel access
+    So when we find a Null value being returned and the field requested is restricted to
+    the current User, we raise Permission Error instead of:
+
+        "Cannot return null for non-nullable field ..."
+
+    """
+    from graphql.execution.execute import default_field_resolver
+    from .utils import field_permlevel_check
+
+    for df in meta.fields:
+        if not df.reqd:
+            continue
+
+        if df.fieldname not in gql_type.fields:
+            continue
+
+        gql_field = gql_type.fields[df.fieldname]
+        if not isinstance(gql_field.type, GraphQLNonNull):
+            continue
+
+        if gql_field.resolve:
+            gql_field.resolve = field_permlevel_check(gql_field.resolve)
+        else:
+            gql_field.resolve = field_permlevel_check(default_field_resolver)
+
+
+def _doctype_resolver(obj, info: GraphQLResolveInfo, **kwargs):
+    dt = get_singular_doctype(info.parent_type.name)
+    return dt
