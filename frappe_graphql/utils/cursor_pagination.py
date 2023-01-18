@@ -1,10 +1,8 @@
+import frappe
 import base64
 import contextlib
 from typing import List
-
 from graphql import GraphQLResolveInfo, GraphQLError
-
-import frappe
 from frappe_graphql.utils.depth_limit_validator import is_introspection_key
 from frappe_graphql.utils.extract_requested_fields_resolver_info import get_fields
 from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
