@@ -6,6 +6,7 @@ from .dataloaders import get_child_table_loader
 from .utils import get_frappe_df_from_resolve_info
 from ..depth_limit_validator import is_introspection_key
 from ..extract_requested_fields_resolver_info import get_fields
+from ..get_path import path_key
 from ..permissions import get_allowed_fieldnames_for_doctype
 
 
@@ -28,7 +29,7 @@ def _child_table_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     if not df:
         return []
 
-    key = _get_child_table_path_key(info)
+    key = path_key(info)
     valid_fields = info.context.get(key)
 
     if not info.context.get(key):
@@ -41,10 +42,6 @@ def _child_table_resolver(obj, info: GraphQLResolveInfo, **kwargs):
         parentfield=df.fieldname,
         fields=valid_fields
     ).load(obj.get("name"))
-
-
-def _get_child_table_path_key(info):
-    return "-".join([p for p in info.path.as_list() if isinstance(p, str)])
 
 
 def _get_fields_child_table(info: GraphQLResolveInfo, child_doctype: str, parent_doctype: str):

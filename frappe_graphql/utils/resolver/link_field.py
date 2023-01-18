@@ -4,6 +4,10 @@ from frappe.model.meta import Meta
 
 from .dataloaders import get_doctype_dataloader
 from .utils import get_frappe_df_from_resolve_info
+from ..depth_limit_validator import is_introspection_key
+from ..extract_requested_fields_resolver_info import get_fields
+from ..get_path import path_key
+from ..permissions import get_allowed_fieldnames_for_doctype
 
 
 def setup_link_field_resolvers(meta: Meta, gql_type: GraphQLType):
@@ -11,11 +15,11 @@ def setup_link_field_resolvers(meta: Meta, gql_type: GraphQLType):
     This will set up Link fields on DocTypes to resolve target docs
     """
     link_dfs = meta.get_link_fields() + meta.get_dynamic_link_fields() + \
-        _get_default_field_links()
+               _get_default_field_links()
 
     for df in link_dfs:
         if df.fieldname not in gql_type.fields or is_scalar_type(
-                gql_type.fields[df.fieldname].type):
+            gql_type.fields[df.fieldname].type):
             continue
 
         gql_field = gql_type.fields[df.fieldname]
@@ -44,8 +48,14 @@ def _resolve_link_field(obj, info: GraphQLResolveInfo, **kwargs):
     if not (dt and dn):
         return None
 
+    key = path_key(info)
+    valid_fields = info.context.get(key)
+
+    if not info.context.get(key):
+        valid_fields = _get_fields_doctype_loader(info, dt)
+        info.context[key] = valid_fields
     # Permission check is done within get_doctype_dataloader via get_list
-    return get_doctype_dataloader(dt).load(dn)
+    return get_doctype_dataloader(dt, valid_fields).load(dn)
 
 
 def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
@@ -61,8 +71,15 @@ def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
     if not dn:
         return None
 
+    key = path_key(info)
+    valid_fields = info.context.get(key)
+
+    if not info.context.get(key):
+        valid_fields = _get_fields_doctype_loader(info, dt)
+        info.context[key] = valid_fields
+
     # Permission check is done within get_doctype_dataloader via get_list
-    return get_doctype_dataloader(dt).load(dn)
+    return get_doctype_dataloader(dt, valid_fields).load(dn)
 
 
 def _resolve_link_name_field(obj, info: GraphQLResolveInfo, **kwargs):
@@ -77,3 +94,17 @@ def _get_default_field_links():
         x for x in get_default_fields_docfield()
         if x.fieldtype in ["Link", "Dynamic Link"]
     ]
+
+
+def _get_fields_doctype_loader(info: GraphQLResolveInfo, doctype: str):
+    selected_fields = {
+        key.replace('__name', '')
+        for key in get_fields(info).keys()
+        if not is_introspection_key(key)
+    }
+    # we need to make sure name is there
+    selected_fields.add("name")
+    fieldnames = set(get_allowed_fieldnames_for_doctype(
+        doctype=doctype
+    ))
+    return list(set(list(selected_fields.intersection(fieldnames))))
