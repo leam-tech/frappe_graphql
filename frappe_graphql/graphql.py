@@ -12,7 +12,7 @@ def execute(query=None, variables=None, operation_name=None):
         schema=get_schema(),
         source=query,
         variable_values=variables,
-        operation_name=operation_name,
+        operation_name=operation_name if operation_name else None,
         middleware=[frappe.get_attr(cmd) for cmd in frappe.get_hooks("graphql_middlewares")],
         context_value=frappe._dict(),
         execution_context_class=DeferredExecutionContext
