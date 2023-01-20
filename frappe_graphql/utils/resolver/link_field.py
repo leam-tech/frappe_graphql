@@ -55,7 +55,7 @@ def _resolve_link_field(obj, info: GraphQLResolveInfo, **kwargs):
         valid_fields = _get_fields_doctype_loader(info, dt)
         info.context[key] = valid_fields
     # Permission check is done within get_doctype_dataloader via get_list
-    return get_doctype_dataloader(dt, valid_fields).load(dn)
+    return get_doctype_dataloader(dt, key, valid_fields).load(dn)
 
 
 def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
@@ -79,7 +79,7 @@ def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
         info.context[key] = valid_fields
 
     # Permission check is done within get_doctype_dataloader via get_list
-    return get_doctype_dataloader(dt, valid_fields).load(dn)
+    return get_doctype_dataloader(dt, key, valid_fields).load(dn)
 
 
 def _resolve_link_name_field(obj, info: GraphQLResolveInfo, **kwargs):

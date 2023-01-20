@@ -9,8 +9,11 @@ from .locals import get_loader_from_locals, set_loader_in_locals
 
 
 def get_child_table_loader(child_doctype: str, parent_doctype: str, parentfield: str,
-                           fields: List[str] = None) -> FrappeDataloader:
+                           path: str = None, fields: List[str] = None) -> FrappeDataloader:
     locals_key = (child_doctype, parent_doctype, parentfield)
+    if path:
+        # incase alias usage
+        locals_key = locals_key + (path,)
     loader = get_loader_from_locals(locals_key)
     if loader:
         return loader

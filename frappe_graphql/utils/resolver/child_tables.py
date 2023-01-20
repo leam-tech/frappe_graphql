@@ -40,6 +40,7 @@ def _child_table_resolver(obj, info: GraphQLResolveInfo, **kwargs):
         child_doctype=df.options,
         parent_doctype=df.parent,
         parentfield=df.fieldname,
+        path=key,
         fields=valid_fields
     ).load(obj.get("name"))
 
