@@ -51,8 +51,8 @@ def _get_fields_child_table(info: GraphQLResolveInfo, child_doctype: str, parent
         for key in get_sub_fields(info).keys()
         if not is_introspection_key(key)
     }
-    # we need to make sure parent is there
-    selected_fields.add("parent")
+    # we need to make sure parent and name is there
+    selected_fields.update({"name", "parent"})
     fieldnames = set(get_allowed_fieldnames_for_doctype(
         doctype=child_doctype,
         parent_doctype=parent_doctype
