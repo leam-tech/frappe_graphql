@@ -2,7 +2,7 @@ import unittest
 import frappe
 
 from frappe_graphql.graphql import get_schema, execute
-from graphql import GraphQLArgument, GraphQLField, GraphQLScalarType, GraphQLString
+from graphql import GraphQLArgument, GraphQLField, GraphQLScalarType, GraphQLString, GraphQLEnumType
 
 """
 The following aspects of Document Resolver is tested here:
@@ -59,6 +59,44 @@ class TestDocumentResolver(unittest.TestCase):
         self.assertEqual(admin.get("doctype"), "User")
         self.assertEqual(admin.get("name"), "Administrator")
         self.assertEqual(admin.get("full_name"), "Administrator")
+
+    def test_enum_type_with_doctype_name(self):
+        """
+        Default Resolvers are setup only for Doctype GQLTypes
+        The GQLType name is used to determine if it's a DocType or not.
+
+        There are cases where some other GQLType (eg: GQLEnumType) is named as a DocType.
+        In such cases, the default resolver should not be set. Trying to set it will result in
+        an error.
+
+        We will make a GQLEnumType named "ToDo" which is a valid Frappe Doctype.
+        We will try to ping on the schema to validate no errors are thrown.
+        """
+        from .. import setup_default_resolvers
+
+        schema = get_schema()
+        todo_enum = GraphQLEnumType(
+            name="ToDo",
+            values={
+                "TODO": "TODO",
+                "DONE": "DONE"
+            }
+        )
+        schema.type_map["ToDo"] = todo_enum
+
+        # Rerun setup_default_resolvers
+        setup_default_resolvers(schema)
+
+        # Run Ping! to validate schema
+        r = execute(
+            query="""
+            query Ping {
+                ping
+            }
+            """
+        )
+        self.assertIsNone(r.get("errors"))
+        self.assertEqual(r.get("data").get("ping"), "pong")
 
     """
     LINK_FIELD_TESTS
