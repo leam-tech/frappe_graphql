@@ -5,7 +5,7 @@ from frappe.model.meta import Meta
 from .dataloaders import get_doctype_dataloader
 from .utils import get_frappe_df_from_resolve_info
 from ..depth_limit_validator import is_introspection_key
-from ..extract_requested_fields_resolver_info import get_fields, get_sub_fields
+from ..extract_requested_fields_resolver_info import get_fields
 from ..get_path import path_key
 from ..permissions import get_allowed_fieldnames_for_doctype
 
@@ -99,7 +99,7 @@ def _get_default_field_links():
 def _get_fields_doctype_loader(info: GraphQLResolveInfo, doctype: str):
     selected_fields = {
         key.replace('__name', '')
-        for key in get_sub_fields(info).keys()
+        for key in get_fields(info).keys()
         if not is_introspection_key(key)
     }
     # we need to make sure name is there

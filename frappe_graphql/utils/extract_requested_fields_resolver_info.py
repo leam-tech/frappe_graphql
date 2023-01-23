@@ -1,5 +1,9 @@
-from graphql import GraphQLResolveInfo
+from graphql import GraphQLResolveInfo, is_object_type, GraphQLObjectType, is_non_null_type, \
+    GraphQLNonNull, is_list_type, GraphQLList
 from graphql.execution.collect_fields import collect_sub_fields
+from typing import cast
+
+from mergedeep import merge, Strategy
 
 
 def collect_fields(node: dict, fragments: dict):
@@ -23,24 +27,8 @@ def collect_fields(node: dict, fragments: dict):
 
 
 def get_fields(info: GraphQLResolveInfo):
-    """
-    we return the entire field
-    collect fields only from the first field node..
-
-    Note: if your use case is from multiple field nodes this will not do.. instead look for
-    get_sub_fields()
-    """
-    node = info.field_nodes[0].to_dict()
     fragments = {name: value.to_dict() for name, value in info.fragments.items()}
-    return collect_fields(node, fragments)
-
-
-def get_sub_fields(info: GraphQLResolveInfo):
-    from frappe_graphql import get_schema
-    return collect_sub_fields(
-        get_schema(),
-        info.fragments,
-        info.variable_values,
-        info.return_type.of_type,
-        info.field_nodes,
-    )
+    fields = {}
+    for field_node in info.field_nodes:
+        merge(fields, collect_fields(field_node.to_dict(), fragments), strategy=Strategy.ADDITIVE)
+    return fields
