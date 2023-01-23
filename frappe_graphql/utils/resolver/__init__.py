@@ -1,4 +1,7 @@
-from graphql import GraphQLSchema, GraphQLType, GraphQLResolveInfo, GraphQLNonNull
+from graphql import (
+    GraphQLSchema, GraphQLType, GraphQLResolveInfo,
+    GraphQLNonNull, GraphQLObjectType
+)
 
 import frappe
 from frappe.model.meta import Meta
@@ -19,7 +22,7 @@ def setup_default_resolvers(schema: GraphQLSchema):
     # Setup custom resolvers for DocTypes
     for type_name, gql_type in schema.type_map.items():
         dt = get_singular_doctype(type_name)
-        if not dt:
+        if not dt or not isinstance(gql_type, GraphQLObjectType):
             continue
 
         meta = frappe.get_meta(dt)
