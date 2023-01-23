@@ -1,7 +1,4 @@
-from graphql import GraphQLResolveInfo, is_object_type, GraphQLObjectType, is_non_null_type, \
-    GraphQLNonNull, is_list_type, GraphQLList
-from graphql.execution.collect_fields import collect_sub_fields
-from typing import cast
+from graphql import GraphQLResolveInfo
 
 from mergedeep import merge, Strategy
 
