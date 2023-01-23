@@ -41,6 +41,6 @@ def get_sub_fields(info: GraphQLResolveInfo):
         get_schema(),
         info.fragments,
         info.variable_values,
-        info.return_type,
+        info.return_type.of_type,
         info.field_nodes,
     )
