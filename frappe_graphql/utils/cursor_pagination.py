@@ -365,4 +365,4 @@ def get_fields_cursor_paginator(doctype: str, info: GraphQLResolveInfo,
     selected_fields = set(get_selected_fields_for_cursor_paginator_node(info))
     selected_fields.add("name")
     fieldnames = set(get_allowed_fieldnames_for_doctype(doctype))
-    return list(set(list(selected_fields.intersection(fieldnames)) + extra_fields or []))
+    return list(set(list(selected_fields.intersection(fieldnames)) + (extra_fields or [])))
