@@ -2,6 +2,9 @@ from graphql import GraphQLResolveInfo
 
 from mergedeep import merge, Strategy
 
+from frappe_graphql.utils.depth_limit_validator import is_introspection_key
+from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
+
 
 def collect_fields(node: dict, fragments: dict):
     """
@@ -29,3 +32,27 @@ def get_fields(info: GraphQLResolveInfo):
     for field_node in info.field_nodes:
         merge(fields, collect_fields(field_node.to_dict(), fragments), strategy=Strategy.ADDITIVE)
     return fields
+
+
+def get_doctype_requested_fields(
+    doctype: str,
+    info: GraphQLResolveInfo,
+    mandatory_fields: set = None,
+    parent_doctype: str = None
+):
+    selected_fields = {
+        key.replace('__name', '')
+        for key in get_fields(info).keys()
+        if not is_introspection_key(key)
+    }
+
+    fieldnames = set(get_allowed_fieldnames_for_doctype(
+        doctype=doctype,
+        parent_doctype=parent_doctype
+    ))
+
+    requested_fields = selected_fields.intersection(fieldnames)
+    if mandatory_fields:
+        requested_fields.update(mandatory_fields)
+
+    return list(requested_fields)
