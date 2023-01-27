@@ -44,4 +44,4 @@ def _child_table_resolver(obj, info: GraphQLResolveInfo, **kwargs):
 
 
 def _get_fields_child_table(info: GraphQLResolveInfo, child_doctype: str, parent_doctype: str):
-    return get_doctype_requested_fields(child_doctype, info, {"name", "parent"}, parent_doctype)
+    return get_doctype_requested_fields(child_doctype, info, {"parent"}, parent_doctype)

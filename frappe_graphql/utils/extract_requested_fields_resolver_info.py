@@ -55,4 +55,7 @@ def get_doctype_requested_fields(
     if mandatory_fields:
         requested_fields.update(mandatory_fields)
 
+    # send name always..
+    requested_fields.add("name")
+
     return list(requested_fields)

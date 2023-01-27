@@ -95,4 +95,4 @@ def _get_default_field_links():
 
 
 def _get_fields_doctype_loader(info: GraphQLResolveInfo, doctype: str):
-    return get_doctype_requested_fields(doctype, info, {"name"})
+    return get_doctype_requested_fields(doctype, info)
