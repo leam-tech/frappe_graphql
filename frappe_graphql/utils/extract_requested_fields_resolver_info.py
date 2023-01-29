@@ -3,6 +3,7 @@ from graphql import GraphQLResolveInfo
 from mergedeep import merge, Strategy
 
 from frappe_graphql.utils.depth_limit_validator import is_introspection_key
+from frappe_graphql.utils.get_path import path_key
 from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
 
 
@@ -40,6 +41,12 @@ def get_doctype_requested_fields(
     mandatory_fields: set = None,
     parent_doctype: str = None
 ):
+    p_key = path_key(info)
+    requested_fields = info.context.get(p_key)
+
+    if requested_fields is not None:
+        return requested_fields
+
     selected_fields = {
         key.replace('__name', '')
         for key in get_fields(info).keys()
@@ -57,5 +64,8 @@ def get_doctype_requested_fields(
 
     # send name always..
     requested_fields.add("name")
+
+    # cache it in context..
+    info.context[p_key] = requested_fields
 
     return list(requested_fields)

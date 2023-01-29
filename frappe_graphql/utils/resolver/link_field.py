@@ -46,14 +46,10 @@ def _resolve_link_field(obj, info: GraphQLResolveInfo, **kwargs):
     if not (dt and dn):
         return None
 
-    key = path_key(info)
-    valid_fields = info.context.get(key)
-
-    if not info.context.get(key):
-        valid_fields = _get_fields_doctype_loader(info, dt)
-        info.context[key] = valid_fields
     # Permission check is done within get_doctype_dataloader via get_list
-    return get_doctype_dataloader(dt, key, valid_fields).load(dn)
+    return get_doctype_dataloader(dt,
+                                  path_key(info),
+                                  get_doctype_requested_fields(dt, info)).load(dn)
 
 
 def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
@@ -69,15 +65,10 @@ def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
     if not dn:
         return None
 
-    key = path_key(info)
-    valid_fields = info.context.get(key)
-
-    if not info.context.get(key):
-        valid_fields = _get_fields_doctype_loader(info, dt)
-        info.context[key] = valid_fields
-
     # Permission check is done within get_doctype_dataloader via get_list
-    return get_doctype_dataloader(dt, key, valid_fields).load(dn)
+    return get_doctype_dataloader(
+        dt, path_key(info),
+        get_doctype_requested_fields(dt, info)).load(dn)
 
 
 def _resolve_link_name_field(obj, info: GraphQLResolveInfo, **kwargs):
@@ -92,7 +83,3 @@ def _get_default_field_links():
         x for x in get_default_fields_docfield()
         if x.fieldtype in ["Link", "Dynamic Link"]
     ]
-
-
-def _get_fields_doctype_loader(info: GraphQLResolveInfo, doctype: str):
-    return get_doctype_requested_fields(doctype, info)

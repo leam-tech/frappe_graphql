@@ -27,21 +27,10 @@ def _child_table_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     if not df:
         return []
 
-    key = path_key(info)
-    valid_fields = info.context.get(key)
-
-    if not info.context.get(key):
-        valid_fields = _get_fields_child_table(info, df.options, df.parent)
-        info.context[key] = valid_fields
-
     return get_child_table_loader(
         child_doctype=df.options,
         parent_doctype=df.parent,
         parentfield=df.fieldname,
-        path=key,
-        fields=valid_fields
+        path=path_key(info),
+        fields=get_doctype_requested_fields(df.options, info, {"parent"}, df.parent)
     ).load(obj.get("name"))
-
-
-def _get_fields_child_table(info: GraphQLResolveInfo, child_doctype: str, parent_doctype: str):
-    return get_doctype_requested_fields(child_doctype, info, {"parent"}, parent_doctype)
