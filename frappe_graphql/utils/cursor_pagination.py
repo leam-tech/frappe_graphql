@@ -358,11 +358,11 @@ def extract_field_node_from_cursor_paginator(info: GraphQLResolveInfo) -> dict:
 
 
 def get_fields_cursor_paginator(doctype: str, info: GraphQLResolveInfo,
-                                extra_fields: List[str] = None):
+                                extra_fields: List[str] = None, parent_doctype=None):
     """
     This can be used in our custom CursorPaginator queries
     """
     selected_fields = set(get_selected_fields_for_cursor_paginator_node(info))
     selected_fields.add("name")
-    fieldnames = set(get_allowed_fieldnames_for_doctype(doctype))
+    fieldnames = set(get_allowed_fieldnames_for_doctype(doctype, parent_doctype=parent_doctype))
     return list(set(list(selected_fields.intersection(fieldnames)) + (extra_fields or [])))
