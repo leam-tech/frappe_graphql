@@ -4,6 +4,8 @@ from frappe.model.meta import Meta
 
 from .dataloaders import get_child_table_loader
 from .utils import get_frappe_df_from_resolve_info
+from ..gql_fields import get_doctype_requested_fields
+from .. import get_info_path_key
 
 
 def setup_child_table_resolvers(meta: Meta, gql_type: GraphQLType):
@@ -28,5 +30,7 @@ def _child_table_resolver(obj, info: GraphQLResolveInfo, **kwargs):
     return get_child_table_loader(
         child_doctype=df.options,
         parent_doctype=df.parent,
-        parentfield=df.fieldname
+        parentfield=df.fieldname,
+        path=get_info_path_key(info),
+        fields=get_doctype_requested_fields(df.options, info, {"parent"}, df.parent)
     ).load(obj.get("name"))

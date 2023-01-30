@@ -4,6 +4,8 @@ from frappe.model.meta import Meta
 
 from .dataloaders import get_doctype_dataloader
 from .utils import get_frappe_df_from_resolve_info
+from ..gql_fields import get_doctype_requested_fields
+from .. import get_info_path_key
 
 
 def setup_link_field_resolvers(meta: Meta, gql_type: GraphQLType):
@@ -11,11 +13,11 @@ def setup_link_field_resolvers(meta: Meta, gql_type: GraphQLType):
     This will set up Link fields on DocTypes to resolve target docs
     """
     link_dfs = meta.get_link_fields() + meta.get_dynamic_link_fields() + \
-        _get_default_field_links()
+               _get_default_field_links()
 
     for df in link_dfs:
         if df.fieldname not in gql_type.fields or is_scalar_type(
-                gql_type.fields[df.fieldname].type):
+            gql_type.fields[df.fieldname].type):
             continue
 
         gql_field = gql_type.fields[df.fieldname]
@@ -45,7 +47,9 @@ def _resolve_link_field(obj, info: GraphQLResolveInfo, **kwargs):
         return None
 
     # Permission check is done within get_doctype_dataloader via get_list
-    return get_doctype_dataloader(dt).load(dn)
+    return get_doctype_dataloader(dt,
+                                  get_info_path_key(info),
+                                  get_doctype_requested_fields(dt, info)).load(dn)
 
 
 def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
@@ -62,7 +66,9 @@ def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
         return None
 
     # Permission check is done within get_doctype_dataloader via get_list
-    return get_doctype_dataloader(dt).load(dn)
+    return get_doctype_dataloader(
+        dt, get_info_path_key(info),
+        get_doctype_requested_fields(dt, info)).load(dn)
 
 
 def _resolve_link_name_field(obj, info: GraphQLResolveInfo, **kwargs):

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import List
 
 import frappe
 
@@ -7,9 +8,12 @@ from .frappe_dataloader import FrappeDataloader
 from .locals import get_loader_from_locals, set_loader_in_locals
 
 
-def get_child_table_loader(child_doctype: str, parent_doctype: str, parentfield: str) \
-        -> FrappeDataloader:
+def get_child_table_loader(child_doctype: str, parent_doctype: str, parentfield: str,
+                           path: str = None, fields: List[str] = None) -> FrappeDataloader:
     locals_key = (child_doctype, parent_doctype, parentfield)
+    if path:
+        # incase alias usage
+        locals_key = locals_key + (path,)
     loader = get_loader_from_locals(locals_key)
     if loader:
         return loader
@@ -18,14 +22,16 @@ def get_child_table_loader(child_doctype: str, parent_doctype: str, parentfield:
         child_doctype=child_doctype,
         parent_doctype=parent_doctype,
         parentfield=parentfield,
+        fields=fields
     ))
     set_loader_in_locals(locals_key, loader)
     return loader
 
 
-def _get_child_table_loader_fn(child_doctype: str, parent_doctype: str, parentfield: str):
+def _get_child_table_loader_fn(child_doctype: str, parent_doctype: str, parentfield: str,
+                               fields: List[str] = None):
     def _inner(keys):
-        fieldnames = get_allowed_fieldnames_for_doctype(
+        fieldnames = fields or get_allowed_fieldnames_for_doctype(
             doctype=child_doctype,
             parent_doctype=parent_doctype
         )

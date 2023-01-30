@@ -1,7 +1,10 @@
 from frappe import _
-from graphql import (ValidationRule, ValidationContext, DefinitionNode, FragmentDefinitionNode, OperationDefinitionNode,
+from graphql import (ValidationRule, ValidationContext, DefinitionNode, FragmentDefinitionNode,
+                     OperationDefinitionNode,
                      Node, GraphQLError, FieldNode, InlineFragmentNode, FragmentSpreadNode)
 from typing import Optional, Union, Callable, Pattern, List, Dict
+
+from frappe_graphql.utils.introspection import is_introspection_key
 
 IgnoreType = Union[Callable[[str], bool], Pattern, str]
 
@@ -78,7 +81,8 @@ def determine_depth(
     if depth_so_far > max_depth:
         context.report_error(
             GraphQLError(
-                _("'{0}' exceeds maximum operation depth of {1}.").format(operation_name, max_depth),
+                _("'{0}' exceeds maximum operation depth of {1}.").format(operation_name,
+                                                                          max_depth),
                 [node],
             )
         )
@@ -135,14 +139,6 @@ def determine_depth(
         raise Exception(
             _("Depth crawler cannot handle: {0}.").format(node.kind)
         )
-
-
-def is_introspection_key(key):
-    # from: https://spec.graphql.org/June2018/#sec-Schema
-    # > All types and directives defined within a schema must not have a name which
-    # > begins with "__" (two underscores), as this is used exclusively
-    # > by GraphQL’s introspection system.
-    return str(key).startswith("__")
 
 
 def is_ignored(node: FieldNode, ignore: Optional[List[IgnoreType]] = None) -> bool:
