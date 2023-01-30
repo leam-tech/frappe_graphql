@@ -3,22 +3,22 @@ import base64
 import contextlib
 from typing import List
 from graphql import GraphQLResolveInfo, GraphQLError
-from frappe_graphql.utils.depth_limit_validator import is_introspection_key
-from frappe_graphql.utils.extract_requested_fields_resolver_info import get_fields
+from frappe_graphql.utils.introspection import is_introspection_key
+from frappe_graphql.utils.gql_fields import get_field_tree_dict
 from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
 
 
 class CursorPaginator(object):
     def __init__(
-            self,
-            doctype,
-            filters=None,
-            skip_process_filters=False,
-            count_resolver=None,
-            node_resolver=None,
-            default_sorting_fields=None,
-            default_sorting_direction=None,
-            extra_args=None):
+        self,
+        doctype,
+        filters=None,
+        skip_process_filters=False,
+        count_resolver=None,
+        node_resolver=None,
+        default_sorting_fields=None,
+        default_sorting_direction=None,
+        extra_args=None):
 
         if (not count_resolver) != (not node_resolver):
             frappe.throw(
@@ -153,7 +153,7 @@ class CursorPaginator(object):
         )
 
     def get_fields_to_fetch(self, doctype, filters, sorting_fields):
-        return get_fields_cursor_paginator(doctype, self.resolve_info, sorting_fields)
+        return get_paginator_fields(doctype, self.resolve_info, sorting_fields)
 
     def get_sort_args(self, sorting_input=None):
         sort_dir = self.default_sorting_direction if self.default_sorting_direction in (
@@ -241,7 +241,7 @@ class CursorPaginator(object):
                 return column
             meta = frappe.get_meta(self.doctype)
             return f"`tab{self.doctype}`.{column}" if column in \
-                meta.get_valid_columns() else column
+                                                      meta.get_valid_columns() else column
 
         def db_escape(v):
             return frappe.db.escape(v)
@@ -249,19 +249,19 @@ class CursorPaginator(object):
         def _get_cursor_column_condition(operator, column, value, include_equals=False):
             if operator == ">":
                 return format_column_name(column) \
-                    + f" {operator}{'=' if include_equals else ''} " \
-                    + db_escape(value)
+                       + f" {operator}{'=' if include_equals else ''} " \
+                       + db_escape(value)
             else:
                 if value is None:
                     return format_column_name(column) \
-                        + " IS NULL"
+                           + " IS NULL"
                 return "(" \
-                    + format_column_name(column) \
-                    + f" {operator}{'=' if include_equals else ''} " \
-                    + db_escape(value) \
-                    + " OR " \
-                    + format_column_name(column) \
-                    + " IS NULL)"
+                       + format_column_name(column) \
+                       + f" {operator}{'=' if include_equals else ''} " \
+                       + db_escape(value) \
+                       + " OR " \
+                       + format_column_name(column) \
+                       + " IS NULL)"
 
         def _get_cursor_condition(sorting_fields, values):
             """
@@ -278,7 +278,7 @@ class CursorPaginator(object):
 
                 if sub_condition:
                     return f"(({format_column_name(sorting_fields[0])} IS NULL AND {sub_condition})" \
-                        + f" OR {format_column_name(sorting_fields[0])} IS NOT NULL)"
+                           + f" OR {format_column_name(sorting_fields[0])} IS NOT NULL)"
                 return ""
 
             condition = _get_cursor_column_condition(
@@ -325,7 +325,7 @@ class CursorPaginator(object):
         return frappe.parse_json(frappe.safe_decode(base64.b64decode(cursor)))
 
 
-def get_selected_fields_for_cursor_paginator_node(info: GraphQLResolveInfo):
+def _get_paginator_node_fields(info: GraphQLResolveInfo):
     """
     we know how the structure looks like based on the specs
     https://relay.dev/graphql/connections.htm
@@ -339,7 +339,7 @@ def get_selected_fields_for_cursor_paginator_node(info: GraphQLResolveInfo):
     from jmespath.exceptions import JMESPathTypeError
 
     expression = jmespath.compile("edges.node.keys(@)")
-    fields = get_fields(info)
+    fields = get_field_tree_dict(info)
     with contextlib.suppress(JMESPathTypeError):
         # maybe the following can be done in jmespath =)
         return [field.replace('__name', '') for field in expression.search(fields) or [] if
@@ -347,22 +347,12 @@ def get_selected_fields_for_cursor_paginator_node(info: GraphQLResolveInfo):
     return []
 
 
-def extract_field_node_from_cursor_paginator(info: GraphQLResolveInfo) -> dict:
-    """
-    Basically the node which the user specified what fields they need..
-    """
-    import jmespath
-    expression = jmespath.compile(
-        "selection_set.selections[?name.value == 'edges'] |[0].selection_set.selections[?name.value == 'node'] | [0]")  # noqa
-    return expression.search(info.field_nodes[0].to_dict())
-
-
-def get_fields_cursor_paginator(doctype: str, info: GraphQLResolveInfo,
-                                extra_fields: List[str] = None, parent_doctype=None):
+def get_paginator_fields(doctype: str, info: GraphQLResolveInfo,
+                         extra_fields: List[str] = None, parent_doctype=None):
     """
     This can be used in our custom CursorPaginator queries
     """
-    selected_fields = set(get_selected_fields_for_cursor_paginator_node(info))
+    selected_fields = set(_get_paginator_node_fields(info))
     selected_fields.add("name")
     fieldnames = set(get_allowed_fieldnames_for_doctype(doctype, parent_doctype=parent_doctype))
     return list(set(list(selected_fields.intersection(fieldnames)) + (extra_fields or [])))

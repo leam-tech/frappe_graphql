@@ -5,9 +5,13 @@ from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
 from .locals import get_loader_from_locals, set_loader_in_locals
 
 
-def get_doctype_dataloader(doctype: str, path=None, fields: List[str] = None) -> FrappeDataloader:
+def get_doctype_dataloader(doctype: str, path: str = None,
+                           fields: List[str] = None) -> FrappeDataloader:
     """
-    incase your dataloader is re-used using aliases
+    Parameters:
+        doctype: the doctype
+        path: pass the graphql info path if your dataloader is used multiple time using aliases
+        fields: fields to fetch
     """
     key = doctype
     if path:

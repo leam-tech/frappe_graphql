@@ -2,17 +2,30 @@ from graphql import GraphQLResolveInfo
 
 from mergedeep import merge, Strategy
 
-from frappe_graphql.utils.depth_limit_validator import is_introspection_key
-from frappe_graphql.utils.get_path import path_key
+from frappe_graphql.utils.introspection import is_introspection_key
+from frappe_graphql.utils import get_info_path_key
 from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
 
 
 def collect_fields(node: dict, fragments: dict):
     """
+    Recursively collects fields from the AST
     Inspired from https://gist.github.com/mixxorz/dc36e180d1888629cf33
+
     Notes:
         => Please make sure your node and fragments passed have been converted to dicts
         => Best used in conjunction with `get_allowed_fieldnames_for_doctype()`
+
+    Args:
+        node (dict): A node in the AST
+        fragments (dict): Fragment definitions
+    Returns:
+        A dict mapping each field found, along with their sub fields.
+        {'name': {},
+         'sentimentsPerLanguage': {'id': {},
+                                   'name': {},
+                                   'totalSentiments': {}},
+         'slug': {}}
     """
 
     field = {}
@@ -27,7 +40,19 @@ def collect_fields(node: dict, fragments: dict):
     return field
 
 
-def get_fields(info: GraphQLResolveInfo):
+def get_field_tree_dict(info: GraphQLResolveInfo):
+    """
+    A hierarchical dictionary of the graphql resolver fields nodes merged and returned.
+    Args:
+        info (GraphQLResolveInfo): GraphqlResolver Info
+    Returns:
+        A dict mapping each field found, along with their sub fields.
+        {'name': {},
+         'sentimentsPerLanguage': {'id': {},
+                                   'name': {},
+                                   'totalSentiments': {}},
+         'slug': {}}
+    """
     fragments = {name: value.to_dict() for name, value in info.fragments.items()}
     fields = {}
     for field_node in info.field_nodes:
@@ -41,7 +66,23 @@ def get_doctype_requested_fields(
     mandatory_fields: set = None,
     parent_doctype: str = None
 ):
-    p_key = path_key(info)
+    """
+    Returns the list of requested fields for the given doctype from a GraphQL query.
+
+    :param doctype: The doctype to retrieve requested fields for.
+    :type doctype: str
+    :param info: The GraphQLResolveInfo object representing information about a
+        resolver's execution.
+    :type info: GraphQLResolveInfo
+    :param mandatory_fields: A set of fields that should always be included in the returned list,
+        even if not requested.
+    :type mandatory_fields: set
+    :param parent_doctype: The doctype of the parent object, if any.
+    :type parent_doctype: str
+    :return: The list of requested fields for the given doctype.
+    :rtype: list of str
+    """
+    p_key = get_info_path_key(info)
     requested_fields = info.context.get(p_key)
 
     if requested_fields is not None:
@@ -49,7 +90,7 @@ def get_doctype_requested_fields(
 
     selected_fields = {
         key.replace('__name', '')
-        for key in get_fields(info).keys()
+        for key in get_field_tree_dict(info).keys()
         if not is_introspection_key(key)
     }
 

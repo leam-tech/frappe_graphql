@@ -4,8 +4,8 @@ from frappe.model.meta import Meta
 
 from .dataloaders import get_doctype_dataloader
 from .utils import get_frappe_df_from_resolve_info
-from ..extract_requested_fields_resolver_info import get_doctype_requested_fields
-from ..get_path import path_key
+from ..gql_fields import get_doctype_requested_fields
+from .. import get_info_path_key
 
 
 def setup_link_field_resolvers(meta: Meta, gql_type: GraphQLType):
@@ -48,7 +48,7 @@ def _resolve_link_field(obj, info: GraphQLResolveInfo, **kwargs):
 
     # Permission check is done within get_doctype_dataloader via get_list
     return get_doctype_dataloader(dt,
-                                  path_key(info),
+                                  get_info_path_key(info),
                                   get_doctype_requested_fields(dt, info)).load(dn)
 
 
@@ -67,7 +67,7 @@ def _resolve_dynamic_link_field(obj, info: GraphQLResolveInfo, **kwargs):
 
     # Permission check is done within get_doctype_dataloader via get_list
     return get_doctype_dataloader(
-        dt, path_key(info),
+        dt, get_info_path_key(info),
         get_doctype_requested_fields(dt, info)).load(dn)
 
 
