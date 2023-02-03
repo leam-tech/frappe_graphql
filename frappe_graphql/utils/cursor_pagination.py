@@ -1,11 +1,8 @@
 import frappe
 import base64
-import contextlib
 from typing import List
 from graphql import GraphQLResolveInfo, GraphQLError
-from frappe_graphql.utils.introspection import is_introspection_key
-from frappe_graphql.utils.gql_fields import get_field_tree_dict, get_doctype_requested_fields
-from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
+from frappe_graphql.utils.gql_fields import get_doctype_requested_fields
 
 
 class CursorPaginator(object):
