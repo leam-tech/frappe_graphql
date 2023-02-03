@@ -1,3 +1,4 @@
+import jmespath
 from graphql import GraphQLResolveInfo
 
 from mergedeep import merge, Strategy
@@ -64,21 +65,29 @@ def get_doctype_requested_fields(
     doctype: str,
     info: GraphQLResolveInfo,
     mandatory_fields: set = None,
-    parent_doctype: str = None
+    parent_doctype: str = None,
+    jmespath_str: str = None
 ):
     """
     Returns the list of requested fields for the given doctype from a GraphQL query.
 
     :param doctype: The doctype to retrieve requested fields for.
     :type doctype: str
+
     :param info: The GraphQLResolveInfo object representing information about a
         resolver's execution.
     :type info: GraphQLResolveInfo
+
     :param mandatory_fields: A set of fields that should always be included in the returned list,
         even if not requested.
     :type mandatory_fields: set
+
     :param parent_doctype: The doctype of the parent object, if any.
     :type parent_doctype: str
+
+    :param jmespath_str: The jmespath string leading to the field_node of the specified doctype.
+    :type jmespath_str: str
+
     :return: The list of requested fields for the given doctype.
     :rtype: list of str
     """
@@ -88,9 +97,14 @@ def get_doctype_requested_fields(
     if requested_fields is not None:
         return requested_fields
 
+    field_tree = get_field_tree_dict(info)
+    if jmespath_str:
+        expression = jmespath.compile(jmespath_str)
+        field_tree = expression.search(field_tree)
+
     selected_fields = {
         key.replace('__name', '')
-        for key in get_field_tree_dict(info).keys()
+        for key in (field_tree or {}).keys()
         if not is_introspection_key(key)
     }
 

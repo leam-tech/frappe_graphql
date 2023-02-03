@@ -1,11 +1,8 @@
 import frappe
 import base64
-import contextlib
 from typing import List
 from graphql import GraphQLResolveInfo, GraphQLError
-from frappe_graphql.utils.introspection import is_introspection_key
-from frappe_graphql.utils.gql_fields import get_field_tree_dict
-from frappe_graphql.utils.permissions import get_allowed_fieldnames_for_doctype
+from frappe_graphql.utils.gql_fields import get_doctype_requested_fields
 
 
 class CursorPaginator(object):
@@ -325,34 +322,21 @@ class CursorPaginator(object):
         return frappe.parse_json(frappe.safe_decode(base64.b64decode(cursor)))
 
 
-def _get_paginator_node_fields(info: GraphQLResolveInfo):
+def get_paginator_fields(
+    doctype: str,
+    info: GraphQLResolveInfo,
+    extra_fields: List[str] = None,
+    parent_doctype=None
+):
     """
     we know how the structure looks like based on the specs
     https://relay.dev/graphql/connections.htm
-
-    We are only concerned with the fields we are fetching from the db
-    Note:
-        => We will be avoiding introspection keys
-        => We will not be sending __name as we define these link fields
+    so jmespath_str can be determined..
     """
-    import jmespath
-    from jmespath.exceptions import JMESPathTypeError
-
-    expression = jmespath.compile("edges.node.keys(@)")
-    fields = get_field_tree_dict(info)
-    with contextlib.suppress(JMESPathTypeError):
-        # maybe the following can be done in jmespath =)
-        return [field.replace('__name', '') for field in expression.search(fields) or [] if
-                not is_introspection_key(field)]
-    return []
-
-
-def get_paginator_fields(doctype: str, info: GraphQLResolveInfo,
-                         extra_fields: List[str] = None, parent_doctype=None):
-    """
-    This can be used in our custom CursorPaginator queries
-    """
-    selected_fields = set(_get_paginator_node_fields(info))
-    selected_fields.add("name")
-    fieldnames = set(get_allowed_fieldnames_for_doctype(doctype, parent_doctype=parent_doctype))
-    return list(set(list(selected_fields.intersection(fieldnames)) + (extra_fields or [])))
+    return get_doctype_requested_fields(
+        doctype=doctype,
+        info=info,
+        mandatory_fields=set(extra_fields) if extra_fields else None,
+        parent_doctype=parent_doctype,
+        jmespath_str="edges.node"
+    )
