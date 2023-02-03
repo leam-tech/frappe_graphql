@@ -85,7 +85,7 @@ def get_doctype_requested_fields(
     :param parent_doctype: The doctype of the parent object, if any.
     :type parent_doctype: str
 
-    :param jmespath_str: The jmespath string leading to the return type of the specified doctype.
+    :param jmespath_str: The jmespath string leading to the field_node of the specified doctype.
     :type jmespath_str: str
 
     :return: The list of requested fields for the given doctype.
