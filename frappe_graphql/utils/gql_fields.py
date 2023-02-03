@@ -98,14 +98,13 @@ def get_doctype_requested_fields(
         return requested_fields
 
     field_tree = get_field_tree_dict(info)
-
     if jmespath_str:
         expression = jmespath.compile(jmespath_str)
         field_tree = expression.search(field_tree)
 
     selected_fields = {
         key.replace('__name', '')
-        for key in field_tree.keys()
+        for key in (field_tree or {}).keys()
         if not is_introspection_key(key)
     }
 
