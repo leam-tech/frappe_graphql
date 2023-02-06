@@ -92,6 +92,8 @@ def get_doctype_requested_fields(
     :rtype: list of str
     """
     p_key = get_info_path_key(info)
+    if jmespath_str:
+        p_key += f"-{jmespath_str}"
     requested_fields = info.context.get(p_key)
 
     if requested_fields is not None:
