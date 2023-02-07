@@ -18,6 +18,10 @@ def execute(query=None, variables=None, operation_name=None):
         execution_context_class=DeferredExecutionContext
     )
     output = frappe._dict()
+
+    # lets clear all local cache build up just incase..
+    frappe.local.dataloaders = frappe._dict()
+
     for k in ("data", "errors"):
         if not getattr(result, k, None):
             continue
